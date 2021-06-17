@@ -1,0 +1,67 @@
+{% extends 'bash.html' %}
+{% block content %}
+<h1>Search</h1>
+<ul>
+{% for post in object_list %}
+<li><a href = "{% url 'article' post.pk %}">{{ post.title }}</a>
+ - 	<a href="#">{{post.author}}</a> - {{post.post_date}} - <a href = "{% url 'category' post.category %}">{{post.category|slugify}}</a>
+{% if user.is_authenticated and user.id == post.author.id %}
+	- [<a href = "{% url 'update_post' post.pk %}">Edit</a> ,
+<a href = "{% url 'delete_post' post.pk %}">Delete</a>]
+{% endif %}
+<br/>
+{{ post.body|slice:":200" |safe}}
+</li>
+
+{% endfor %}
+</ul>
+
+{% if is_paginated %}
+  <ul class="pagination">
+    
+  	<!-- Previous -->
+    {% if page_obj.has_previous %}
+    	<li class="page-item"><a class = "page-link" href="?{%if query %}search_id={{query}}&{% endif %}page={{ page_obj.previous_page_number }}">&laquo;</a></li>
+    	<!-- <li class="page-item">
+    		<a class = "page-link" href="?page=1">1</a>
+    	</li> -->
+    {% else %}
+      <li class="page-item disabled">
+      	<a class="page-link" href="#" tabindex="-1">&laquo;</a>
+      </li>
+    <!--  <li class="page-item active">
+     	<a class = "page-link" href="?page={{page_obj.number}}">{{page_obj.number}}</a>
+     </li> -->
+    {% endif %}
+
+
+    
+ {% for i in paginator.page_range %}
+   	{% if i == page_obj.number %}
+       <li class="page-item active"><a class = "page-link" href="?{%if query %}search_id={{query}}&{% endif %}page={{ i }}">{{ i }}</a></li>
+    {% else %}
+       <li class="page-item"><a class = "page-link" href="?{%if query %}search_id={{query}}&{% endif %}page={{ i }}">{{ i }}</a></li>
+    {% endif %}
+{% endfor %}
+
+
+    <!-- last page -->
+    {% if page_obj.has_next %}
+      <!-- <li class="page-item">
+      	<a class = "page-link" href="?page={{ page_obj.paginator.num_pages }}">{{page_obj.paginator.num_pages}}</a>
+      </li> -->
+      
+      <li class="page-item">
+      	<a class = "page-link" href="?{%if query %}search_id={{query}}&{% endif %}page={{ page_obj.next_page_number }}">&raquo;</a>
+      </li>
+    {% else %}
+      <!-- <li class="page-item active"><a class = "page-link" href="?page={{page_obj.number}}">{{page_obj.number}}</a></li> -->
+      <li class="page-item disabled">
+      	<a class="page-link" href="#" tabindex="-1">&raquo;</a>
+      </li>
+    {% endif %}
+
+  </ul>
+{% endif %}
+
+{% endblock %}

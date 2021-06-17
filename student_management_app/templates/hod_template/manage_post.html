@@ -1,0 +1,66 @@
+{% extends 'hod_template/base_template.html' %}
+{% block page_title %}
+Manage Post
+{% endblock page_title %}
+{% block main_content %}
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+
+
+           <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Post Details</h3>
+
+                <div class="card-tools">
+                  <div class="input-group input-group-sm" style="width: 150px;">
+                    <input type="text" name="table_search" class="form-control float-right" placeholder="Search">
+
+                    <div class="input-group-append">
+                      <button type="submit" class="btn btn-default"><i class="fas fa-search"></i></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body table-responsive p-0">
+                <table class="table table-hover text-nowrap">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Title</th>
+                      <th>Title Tag</th>
+                      <th>Body</th>
+                      <th>Category</th>
+                      <th>Created at</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  {% for post in posts %}
+                    <tr>
+                      <td>{{ post.id }}</td>
+                      <td>{{ post.title }}</td>
+                      <td>{{ post.title_tag }}</td>
+                      <td>{{ post.body }}</td>
+                      <td>{{ post.category }}</td>
+                      <td>{{ post.post_date }}</td>
+                      <td><a href="{% url 'edit_post_for_hod' post.id %}" class="btn btn-success">Edit</a></td>
+                      <td><a href="{% url 'delete_post_for_hod' post.pk %}" class="btn btn-danger">Delete</a></td>
+                    </tr>
+                  {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- /.content -->
+{% endblock main_content %}
+

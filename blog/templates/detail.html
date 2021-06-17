@@ -1,0 +1,76 @@
+{% extends 'bash.html' %}
+{% load static %}
+{% load mptt_tags %}
+{%block title%}{{post.title_tag}}{% endblock %}
+{% block content %}
+<h1>{{ post.title }}</h1>
+<hr>
+{{post.body | safe}}
+</small>
+<br><br>
+<a href="{% url 'home' %}" class="btn btn-secondary">back</a>
+<br/>
+<hr/>
+<form action="{% url 'like_post' post.pk %}" class="form-group" method="POST">
+  {% csrf_token %}
+  {% if user.is_authenticated %}
+    <button type="submit" name = 'post_id' value ="{{post.id}}" class="btn btn-primary bt-sm">Like</button>
+  {% else %}
+    <p class="btn btn-primary bt-sm" id='like' onMousedown = "myfunction1('like',0)">Like</p>
+  {% endif %}
+</form>
+
+
+<form action="{% url 'dislike_post' post.pk %}" class="form-group" method="POST">
+  {% csrf_token %}
+  {% if user.is_authenticated %}
+    <button type="submit" name = 'post_id1' value ="{{post.id}}" class="btn btn-danger bt-sm">DisLike</button>
+  {% else %}
+    <p id='dislike' class="btn btn-danger bt-sm" onMousedown = "myfunction1('dislike',1)">Dislike</p>
+  {% endif %}
+</form>
+<strong>Contribution:{{total_likes}}</strong>
+
+
+
+
+
+
+
+
+<!-- comment section -->
+
+<h1>Comments........</h1>
+<div>
+  {% if user.is_authenticated %}
+    <button class="my-7" onclick = "myfunction(0,this.id)" id ="button_0">Add Comment</button>
+  {% else %}
+    <button class="my-7" onclick = "myfunction1(this.id,2)" id ="button_0">Add Comment</button>
+  {% endif %}
+</div>
+<hr/>
+<div class="my-20 p-10">
+  {% recursetree comments %}
+    <div id="node_{{node.id}}" class="my-2 p-2" style="border: 1px solid grey">
+      <div class="d-flex bd-highlight">
+        
+        <div class="float-right">{{node.timestamp}}</div>
+      </div>
+      {{node.content}}<br/>
+      {{node.id}}<br/>
+      {{node.parent_id}}<br/>
+      {% if user.is_authenticated %}
+        <button class="button" onclick = "myfunction({{node.id }},this.id)" id ="button_{{node.id}}">Reply</button>      
+      {% else %}
+        <button class="button" onclick = "myfunction1(this.id,2)" id ="button_{{node.id}}">Reply</button>
+      {% endif %}
+    </div>
+    {% if not node.is_leaf_node %}
+      <div class="children pl-2 pl-md-5">
+          {{ children }}
+      </div>
+    {% endif %}
+  {% endrecursetree %}
+
+ </div>
+{% endblock %}
