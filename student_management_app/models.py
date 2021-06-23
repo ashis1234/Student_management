@@ -3,7 +3,6 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.contenttypes.models import ContentType
-# from mptt.models import MPTTModel, TreeForeignKey
 
 
 # Create your models here.
@@ -32,7 +31,6 @@ class Staffs(models.Model):
     address=models.TextField()
     created_at=models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now_add=True)
-    fcm_token=models.TextField(default="")
     objects=models.Manager()
 
 class Courses(models.Model):
@@ -62,7 +60,6 @@ class Students(models.Model):
     session_year_id=models.ForeignKey(SessionYearModel,on_delete=models.CASCADE)
     created_at=models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now_add=True)
-    fcm_token=models.TextField(default="")
     objects = models.Manager()
 
 class Attendance(models.Model):
@@ -124,22 +121,6 @@ class FeedBackStaffs(models.Model):
     objects = models.Manager()
 
 
-class NotificationStudent(models.Model):
-    id = models.AutoField(primary_key=True)
-    student_id = models.ForeignKey(Students, on_delete=models.CASCADE)
-    message = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now_add=True)
-    objects = models.Manager()
-
-
-class NotificationStaffs(models.Model):
-    id = models.AutoField(primary_key=True)
-    staff_id = models.ForeignKey(Staffs, on_delete=models.CASCADE)
-    message = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now_add=True)
-    objects = models.Manager()
 
 class StudentResult(models.Model):
     id=models.AutoField(primary_key=True)
@@ -149,17 +130,6 @@ class StudentResult(models.Model):
     subject_assignment_marks=models.FloatField(default=0)
     created_at=models.DateField(auto_now_add=True)
     updated_at=models.DateField(auto_now_add=True)
-    objects=models.Manager()
-
-class OnlineClassRoom(models.Model):
-    id=models.AutoField(primary_key=True)
-    room_name=models.CharField(max_length=255)
-    room_pwd=models.CharField(max_length=255)
-    subject=models.ForeignKey(Subjects,on_delete=models.CASCADE)
-    session_years=models.ForeignKey(SessionYearModel,on_delete=models.CASCADE)
-    started_by=models.ForeignKey(Staffs,on_delete=models.CASCADE)
-    is_active=models.BooleanField(default=True)
-    created_on=models.DateTimeField(auto_now_add=True)
     objects=models.Manager()
 
 
