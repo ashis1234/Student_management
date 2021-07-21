@@ -2,7 +2,11 @@ from django.contrib import admin
 from django.urls import path,include
 from django.conf import settings
 from django.conf.urls.static import static
-router = routers.DefaultRouter()
+
+# from rest_framework import routers
+# from students_management_project import settings
+
+# router = routers.DefaultRouter()
 
 # router.register(r'sessionyear', SessionYearModelViewSet)
 # router.register(r'courses', CoursesViewSet)
