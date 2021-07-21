@@ -39,8 +39,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'student_management_app',
     'blog',
-    # 'ckeditor',
-    # 'mptt',
+    'ckeditor',
+    'mptt',
+    # 'rest_framework.authtoken',
+    # 'corsheaders',
+    # 'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -121,6 +124,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
+
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 
@@ -131,3 +135,4 @@ STATICFILES_DIRS = (
 
 AUTH_USER_MODEL="student_management_app.CustomUser"
 AUTHENTICATION_BACKENDS=['student_management_app.EmailBackEnd.EmailBackEnd']
+ITEM_PER_PAGE = 1
