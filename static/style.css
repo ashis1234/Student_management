@@ -1,0 +1,110 @@
+*{
+	padding: 0px;
+	margin: 0px;
+	box-sizing: border-box;
+}
+
+.heading_special h4{
+	color: green;
+}
+.post-title{
+	text-decoration: none;
+	color: black;
+	font-weight: 700;
+	font-size: 18px;
+}
+
+.publish-date{
+	color: green;
+}
+
+.left-part{
+	overflow-x: hidden;
+}
+.post-text{
+	margin-top: 10px;
+	font-size: 15px;
+	color: black;
+	font-weight:400 ;
+	word-spacing: 3px;
+	line-height: 17px;
+	color: black;
+}
+.read-more{
+	color: #008CBA;
+}
+
+.category-link a{
+	color: darkseagreen;
+	text-decoration: none;
+	font-weight: 500;
+	font-size: 15px;
+	margin-right: 3px;
+}
+.category-link a:hover{
+	color: darkseagreen;
+}
+.hide{
+	color: white;
+}
+
+.meta {
+    margin-top: 1em;
+    height: 2.5em;
+}
+.roundbox {
+    border: 1px solid #b9b9b9;
+    border-radius: 10px;
+    position: relative;
+}
+ul{
+  display: flex;
+   flex-direction: row;
+   /* Below sets up your display method: flex-start|flex-end|space-between|space-around */
+   justify-content: flex-start; 
+   /* Below removes bullets and cleans white-space */
+   list-style: none;
+   padding: 0;
+   /* Bonus: forces no word-wrap */
+   white-space: nowrap;
+
+}
+.material-icons.md-48{ 
+	font-size: 48px; 
+	fill: white;
+}
+
+.left-meta{
+	float: left;
+}
+.right-meta{
+	float: right;
+}
+.tagcloud{
+	padding: 0;
+	display: flex;
+   flex-wrap: wrap;
+}
+.tagcloud a{
+    text-transform: uppercase;
+	flex-grow: 1;
+	  flex-shrink: 1;
+	  flex-basis: 10ch;
+    padding: 4px 10px;
+    margin-bottom: 7px;
+    margin-right: 4px;
+    font-size: 11px;
+}
+.wrapper {
+    display: flex;
+    align-items: stretch;
+}
+
+#sidebar {
+    min-width: 250px;
+    max-width: 250px;
+}
+
+#sidebar.active {
+    margin-left: -250px;
+}
