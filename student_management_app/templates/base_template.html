@@ -43,9 +43,9 @@
       <h4 style="margin-left: 10px;margin-top: 5px;">Student Management System | 
       {% if user.user_type == '0' %}Principal Pannel
       {% elif user.user_type == '1' %}
-      HOD Pannel <strong>({{user.student.get_dept_name}} Department)</strong>
+      HOD Pannel <strong>({{user.hod.get_dept_name}} Department)</strong>
       {% elif user.user_type == '2' %}
-      Teacher Pannel <strong>({{user.student.get_dept_name}} Department)</strong>
+      Teacher Pannel <strong>({{user.staff.get_dept_name}} Department)</strong>
       {% else %}
       Student Pannel <strong>({{user.student.get_dept_name}} Department)</strong>
     {% endif %}</h4>
