@@ -10,3 +10,12 @@ class UserModel(UserAdmin):
     pass
 
 admin.site.register(CustomUser,UserModel)
+admin.site.register(Staffs)
+admin.site.register(Students)
+admin.site.register(AdminHOD)
+admin.site.register(Principal)
+
+admin.site.register(SessionYearModel)
+admin.site.register(Subjects)
+admin.site.register(Department)
+admin.site.register(Attendance)

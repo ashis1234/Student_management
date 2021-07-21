@@ -12,44 +12,107 @@ from django.shortcuts import render
 from django.urls import reverse
 
 from student_management_app.EmailBackEnd import EmailBackEnd
-from student_management_app.models import CustomUser, Courses, SessionYearModel
+from .models import *
 from django.conf import settings
+
+
+from django.contrib.auth.models import User, Group
+from rest_framework import viewsets
+from rest_framework import permissions
+# from .serializers import *
+
+
+# class SessionYearModelViewSet(viewsets.ModelViewSet):
+#     queryset = SessionYearModel.objects.all()
+#     serializer_class = SessionYearModelSerializer
+#     permission_classes = [permissions.IsAuthenticated]
+
+
+# class CustomUSerViewSet(viewsets.ModelViewSet):
+#     queryset = CustomUser.objects.all()
+#     serializer_class = CustomSerializer
+#     permission_classes = [permissions.IsAuthenticated]
+
+
+# class StaffsViewSet(viewsets.ModelViewSet):
+#     queryset = Staffs.objects.all()
+#     serializer_class = StaffsSerializer
+#     permission_classes = [permissions.IsAuthenticated]
+
+# class StudentsViewSet(viewsets.ModelViewSet):
+#     queryset = Students.objects.all()
+#     serializer_class = StudentsSerializer
+#     permission_classes = [permissions.IsAuthenticated]
+
+
+
+# class SubjectsViewSet(viewsets.ModelViewSet):
+#     queryset = Subjects.objects.all()
+#     serializer_class = SubjectsSerializer
+#     permission_classes = [permissions.IsAuthenticated]
+
+# class CoursesViewSet(viewsets.ModelViewSet):
+#     queryset = Courses.objects.all()
+#     serializer_class = CoursesSerializer
+#     permission_classes = [permissions.IsAuthenticated]
+
+
+
 
 
 def showDemoPage(request):
     return render(request,"demo.html")
 
 def ShowLoginPage(request):
-    user = CustomUser.objects.all()
+    print(request.session.get('login-from'))
     return render(request,"login_page.html")
 
 def doLogin(request):
     if request.method!="POST":
         return HttpResponse("<h2>Method Not Allowed</h2>")
     else:
-        captcha_token=request.POST.get("g-recaptcha-response")
-        cap_url="https://www.google.com/recaptcha/api/siteverify"
-        cap_secret="6LeWtqUZAAAAANlv3se4uw5WAg-p0X61CJjHPxKT"
-        cap_data={"secret":cap_secret,"response":captcha_token}
-        cap_server_response=requests.post(url=cap_url,data=cap_data)
-        cap_json=json.loads(cap_server_response.text)
+        LoginFrom = request.session.get('login-from')
+        subpath = request.session.get('subpath')
+        ItemId = request.session.get('item-id')
+        if LoginFrom:
+            del request.session['login-from']
+        if subpath:
+            del request.session['subpath']
+            del request.session['item-id']
 
-        if cap_json['success']==False:
-            messages.error(request,"Invalid Captcha Try Again")
-            return HttpResponseRedirect("/")
-        print(request.POST.get("username"),request.POST.get("password"))
+
+        # captcha_token=request.POST.get("g-recaptcha-response")
+        # cap_url="https://www.google.com/recaptcha/api/siteverify"
+        # cap_secret="6LeWtqUZAAAAANlv3se4uw5WAg-p0X61CJjHPxKT"
+        # cap_data={"secret":cap_secret,"response":captcha_token}
+        # cap_server_response=requests.post(url=cap_url,data=cap_data)
+        # cap_json=json.loads(cap_server_response.text)
+
+        # if cap_json['success']==False:
+        #     messages.error(request,"Invalid Captcha Try Again")
+        #     return HttpResponseRedirect("/")
+        # print(request.POST.get("username"),request.POST.get("password"))
         user=EmailBackEnd.authenticate(request,username=request.POST.get("username"),password=request.POST.get("password"))
         if user!=None:
             login(request,user)
-            if user.user_type=="1":
+            if subpath:
+                print("ff")
+                return HttpResponseRedirect(reverse(LoginFrom,kwargs={subpath:ItemId}))
+            if LoginFrom:
+                return HttpResponseRedirect(reverse(LoginFrom))
+            
+            if user.user_type=='0':
+                return HttpResponseRedirect('principal_home')
+            elif user.user_type=="1":
                 return HttpResponseRedirect('admin_home')
             elif user.user_type=="2":
                 return HttpResponseRedirect("staff_home")
             else:
                 return HttpResponseRedirect("student_home")
+
         else:
             messages.error(request,"Invalid Login Details")
-            return HttpResponseRedirect("/profile")
+            return HttpResponseRedirect(reverse("show_login"))
 
 
 def GetUserDetails(request):
@@ -60,6 +123,20 @@ def GetUserDetails(request):
 
 def logout_user(request):
     logout(request)
+    LoginFrom = request.session.get('login-from')
+    subpath = request.session.get('subpath')
+    ItemId = request.session.get('item-id')
+    if LoginFrom:
+        del request.session['login-from']
+    if subpath:
+        del request.session['subpath']
+        del request.session['item-id']
+
+    if subpath:
+        return HttpResponseRedirect(reverse(LoginFrom,kwargs={subpath:ItemId}))
+    if LoginFrom:
+        return HttpResponseRedirect(reverse(LoginFrom))
+            
     return HttpResponseRedirect(reverse("home"))
 
 
@@ -67,27 +144,48 @@ def Testurl(request):
     return HttpResponse("Ok")
 
 def signup_admin(request):
-    return render(request,"signup_admin_page.html")
+    department = Department.objects.all()
+    return render(request,"signup_hod_page.html",{'departments':department})
+
+def signup_principal(request):
+    return render(request,"signup_principal_page.html")
+
 
 def signup_student(request):
-    form=AddStudentForm()
-    return render(request,"hod_template/add_student_template.html",{"form":form})
+    department = Department.objects.all()
+    session_year = SessionYearModel.objects.all()
+    return render(request,"signup_student_page.html",{'departments':department,'session_years':session_year})
 
 def signup_staff(request):
-    return render(request,"signup_staff_page.html")
+    department = Department.objects.all()
+    return render(request,"signup_staff_page.html",{'departments':department})
 
-def do_admin_signup(request):
+def do_principal_signup(request):
     username=request.POST.get("username")
     email=request.POST.get("email")
     password=request.POST.get("password")
-
     try:
-        user=CustomUser.objects.create_user(username=username,password=password,email=email,user_type=1)
+        user=CustomUser.objects.create_user(username=username,password=password,email=email,user_type=0)
         user.save()
         messages.success(request,"Successfully Created Admin")
         return HttpResponseRedirect(reverse("show_login"))
-    except:
-        messages.error(request,"Failed to Create Admin")
+    except Exception as e:
+        # messages.error(request,"Failed to Create Admin")
+        return HttpResponseRedirect(reverse("show_login"))
+
+def do_hod_signup(request):
+    username=request.POST.get("username")
+    email=request.POST.get("email")
+    password=request.POST.get("password")
+    try:
+        user=CustomUser.objects.create_user(username=username,password=password,email=email,user_type=1)
+        user.save()
+        print(user.user_type)
+        messages.success(request,"Successfully Created Admin")
+        return HttpResponseRedirect(reverse("show_login"))
+    except Exception as e:
+        print(e)
+        # messages.error(request,"Failed to Create Admin")
         return HttpResponseRedirect(reverse("show_login"))
 
 def do_staff_signup(request):
@@ -95,50 +193,142 @@ def do_staff_signup(request):
     email=request.POST.get("email")
     password=request.POST.get("password")
     address=request.POST.get("address")
-    print(username,password)
     try:
         user=CustomUser.objects.create_user(username=username,password=password,email=email,user_type=2)
         user.staffs.address=address
         user.save()
         messages.success(request,"Successfully Created Staff")
         return HttpResponseRedirect(reverse("show_login"))
-    except:
-        messages.error(request,"Failed to Create Staff")
+    except Exception as e:
+        print()
+        print(e)
+        print()
+        # messages.error(request,"Failed to Create Staff")
         return HttpResponseRedirect(reverse("show_login"))
 
 def do_signup_student(request):
-    if request.method!="POST":
-        return HttpResponse("Method Not Allowed")
-    else:
-        form=AddStudentForm(request.POST)
-        if form.is_valid():
-            first_name=form.cleaned_data["first_name"]
-            last_name=form.cleaned_data["last_name"]
-            username=form.cleaned_data["username"]
-            email=form.cleaned_data["email"]
-            password=form.cleaned_data["password"]
-            address=form.cleaned_data["address"]
-            session_year_id=form.cleaned_data["session_year_id"]
-            course_id=form.cleaned_data["course"]
-            sex=form.cleaned_data["sex"]
-            profile_pic=request.cleaned_data['profile_pic']
-            print(profile_pic)
-            try:
-                user=CustomUser.objects.create_user(username=username,password=password,email=email,last_name=last_name,first_name=first_name,user_type=3)
-                user.students.address=address
-                course_obj=Courses.objects.get(id=course_id)
-                user.students.course_id=course_obj
-                session_year=SessionYearModel.object.get(id=session_year_id)
-                user.students.session_year_id=session_year
-                user.students.gender=sex
-                user.students.profile_pic=profile_pic_url
-                user.save()
-                messages.success(request,"Successfully Added Student")
-                return HttpResponseRedirect(reverse("add_student"))
-            except:
-                messages.error(request,"Failed to Add Student")
-                return HttpResponseRedirect(reverse("add_student"))
-        else:
-            form=AddStudentForm(request.POST)
-            return render(request, "hod_template/add_student_template.html", {"form": form})
+    username=request.POST.get("username")
+    email=request.POST.get("email")
+    password=request.POST.get("password")
+    address=request.POST.get("address")
+    department=request.POST.get("department")
+    session_year=request.POST.get("session_year")
+    dept_id = Department.objects.get(dept_name = department)
+    session_year_id = SessionYearModel.objects.get(id=session_year)
 
+    try:
+        user=CustomUser.objects.create_user(username=username,password=password,email=email,user_type=3)
+        user.student.address = address
+        user.student.dept_id = dept_id
+        user.student.session_year_id = session_year_id
+        user.save()
+        messages.success(request,"Successfully Created Student")
+        return HttpResponseRedirect(reverse("show_login"))
+    except Exception as e:
+        # messages.error(request,"Failed to Create Student")
+        return HttpResponseRedirect(reverse("show_login"))
+
+
+def apply_leave(request):
+    user_obj = CustomUser.objects.get(id=request.user.id)
+    leave_data=LeaveReport.objects.filter(user=user_obj)
+    return render(request,"leave.html",{"leave_data":leave_data})
+
+
+def apply_leave_save(request):
+    if request.method!="POST":
+        return HttpResponseRedirect(reverse("apply_leave"))
+    else:
+        leave_date=request.POST.get("leave_date")
+        leave_msg=request.POST.get("leave_msg")
+        user_obj = CustomUser.objects.get(id=request.user.id)
+        try:
+            leave_report=LeaveReport(user=user_obj,leave_date=leave_date,leave_message=leave_msg,leave_status=0)
+            leave_report.save()
+            messages.success(request, "Successfully Applied for Leave")
+            return HttpResponseRedirect(reverse("apply_leave"))
+        except:
+            messages.error(request, "Failed To Apply for Leave")
+            return HttpResponseRedirect(reverse("apply_leave"))
+
+
+
+def feedback(request):
+    user_obj = CustomUser.objects.get(id=request.user.id)
+    feedback_data=FeedBack.objects.filter(user=user_obj)
+    return render(request,"feedback.html",{"feedback_data":feedback_data})
+
+def feedback_save(request):
+    if request.method!="POST":
+        return HttpResponseRedirect(reverse("feedback_save"))
+    else:
+        feedback_msg=request.POST.get("feedback_msg")
+        user_obj = CustomUser.objects.get(id=request.user.id)
+        try:
+            feedback=FeedBack(user=user_obj,feedback=feedback_msg,feedback_reply="")
+            feedback.save()
+            messages.success(request, "Successfully Sent Feedback")
+            return HttpResponseRedirect(reverse("feedback"))
+        except:
+            messages.error(request, "Failed To Send Feedback")
+            return HttpResponseRedirect(reverse("feedback"))
+
+
+def Delete(request,type,id):
+    if request.method!="POST":
+        return render(request,'delete_post.html',{'name':type,'id' : id})
+    else:
+        if 'yes' in request.POST:
+            try:
+                if type == "post":
+                    Post.objects.filter(id=id).delete()
+                    messages.success(request,type.capitalize() + ' Deleted Successfully')
+                elif type == "student":
+                    student = Students.objects.get(id=id)
+                    CustomUser.objects.filter(id=student.admin.id).delete()
+                    messages.success(request,type.capitalize() + ' Deleted Successfully')
+                elif type == 'staff':
+                    user = CustomUser.objects,get(id=id)
+                    if user.user_type == '1':
+                        staff = AdminHOD.objects.get(admin=user)
+                    else:
+                        staff = Staffs.objects.get(admin=user)
+                    staff.delete()
+                    user.delete()
+                    messages.success(request,type.capitalize() + ' Deleted Successfully')
+                elif type == 'department':
+                    Department.objects.filter(id=id).delete()
+                    messages.success(request,type.capitalize() + ' Deleted Successfully')
+                elif type=='subject':
+                    Subjects.objects.filter(id=id).delete()
+                    messages.success(request,type.capitalize() + ' Deleted Successfully')
+                elif type=='session':
+                    SessionYearModel.objects.filter(id=id).delete()
+                    messages.success(request,type.capitalize() + ' Deleted Successfully')
+                elif type=='category':
+                    cat_obj = Category.objects.get(id=id)
+                    post_cat = Post_category.objects.filter(cat_id = cat_obj)
+                    print(cat_obj,post_cat)
+                    for p_cat in post_cat:
+                        post = p_cat.post_id
+                        post.category.remove(cat_obj.name)
+                        post.save()
+                        p_cat.delete()
+                    cat_obj.delete()
+                    messages.success(request,type.capitalize() + ' Deleted Successfully')       
+            except Exception as e:
+                messages.error(request,type.capitalize() + ' Not Deleted')
+        else:
+            messages.error(request,type.capitalize() + ' Not Deleted')
+        return HttpResponseRedirect(reverse("manage_"+type))
+
+
+
+    
+
+def ProfileView(request,user):
+    try:
+        user = CustomUser.objects.get(username=user)
+    except Exception as e:
+        return HttpResponse("user Not Exist")
+    return HttpResponse("user Exist")

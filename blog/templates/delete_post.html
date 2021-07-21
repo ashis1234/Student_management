@@ -1,0 +1,28 @@
+{% extends 'base_template.html' %}
+{% block page_title %}
+Delete {{name}}
+{% endblock page_title %}
+{% block main_content %}
+    <section class="content">
+      <div class="container-fluid">
+          <div class="row">
+              <div class="col-md-12">
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">Delete {{name}}</h3>
+              </div>
+                 <form role="form" action="{% url 'delete' name id %}" method="post" enctype="multipart/form-data">
+                     {% csrf_token %}
+                    <h2>Are you want to delete the {{name}}?</h2>
+                    <div class="card-footer">
+                      <p>
+                        <button name='yes' type="submit" class="btn btn-primary btn-danger">Yes</button>
+                        <button name='no' type="submit" class="btn btn-primary btn-info">No</button></p>
+                    </div>
+                  </form> 
+            </div>
+          </div>
+          </div>
+      </div>
+    </section>
+{% endblock main_content %}

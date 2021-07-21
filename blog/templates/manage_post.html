@@ -1,0 +1,67 @@
+{% extends 'base_template.html' %}
+{% block page_title %}
+Manage Post
+{% endblock page_title %}
+{% block main_content %}
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Post Details</h3>
+                {% if pagination_req %}
+                <div class="card-tools">
+                  <ul class="pagination pagination-sm">
+                    {% include 'pagination.html' with blog_posts=posts %}
+                  </ul>
+                </div>
+                {% endif %}
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body table-responsive p-0">
+                <table class="table table-hover text-nowrap">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Title</th>
+                      <th>Author</th>
+                      <th>Category</th>
+                      <th>Created at</th>
+                      <th>Featured</th>
+                      <th>Likes</th>
+                      <th>DisLikes</th>
+                      <th>Views</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  {% for post in posts %}
+                    <tr>
+                      <td>{{ post.id }}</td>
+                      <td><a href="{% url 'article' post.id %}">{{ post.title|safe|truncatechars:50}}</a></td>
+                      <td>{{ post.author }}</td>
+                      <td>{{ post.category }}</td>
+                      <td>{{ post.post_date }}</td>
+                      <td>{{ post.featured}}</td>
+                      <td>{{ post.get_likes }}</td>
+                      <td>{{ post.get_dislikes }}</td>
+                      <td>{{ post.view_count }}</td>
+                      <td><a href="{% url 'edit_post' post.id %}" class="btn btn-success">Edit</a></td>
+                      <td><a href="{% url 'delete' 'post' post.pk %}" class="btn btn-danger">Delete</a></td>
+                    </tr>
+                  {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- /.content -->
+{% endblock main_content %}
+

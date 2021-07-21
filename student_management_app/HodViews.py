@@ -1,250 +1,399 @@
-import datetime
-from blog.models import *
-from blog.forms import *
-from django.views.generic import DeleteView
+import json
+from django.views.generic import ListView,DetailView,CreateView,UpdateView,DeleteView
+import requests
 from django.contrib import messages
-from django.http import HttpResponse, HttpResponseRedirect
+from django.contrib.auth.models import User
+from django.core.files.storage import FileSystemStorage
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse,Http404
 from django.shortcuts import render
-from django.urls import reverse,reverse_lazy
+from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
+from blog.forms import PostForm,EditForm
+from .forms import *
+from .models import CustomUser, Staffs, Department, Subjects, Students, SessionYearModel,FeedBack,LeaveReport, Attendance, AttendanceReport
+from django.urls import reverse_lazy,reverse
+from blog.models import *
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from students_management_project.settings import ITEM_PER_PAGE
 
-from .models import Students, Courses, Subjects, CustomUser, Attendance, AttendanceReport,LeaveReportStudent, FeedBackStudent, StudentResult, SessionYearModel
+def Pagination_handle(request,obj):
+    pagination_req = len(obj) > ITEM_PER_PAGE
+    page = request.GET.get('page', 1)
+    obj_paginator = Paginator(obj, ITEM_PER_PAGE)
+    try:
+        obj = obj_paginator.page(page)
+    except PageNotAnInteger:
+        obj = obj_paginator.page(ITEM_PER_PAGE)
+    except EmptyPage:
+        obj = obj_paginator.page(obj_paginator.num_pages)
+    return pagination_req,obj
+
+def Hod_home(request):
+    if request.user.is_anonymous:
+        raise Http404("Anonymous User Hasn't Authorize To Access Admin Page")
+    elif request.user.user_type == 3:
+        raise Http404("Staff Hasn't Authorize To Access Admin Page")
+    elif request.user.user_type == 2:
+        raise Http404("Students Hasn't Authorize To Access Admin Page")
+    else:
+        dept_id = request.user.hod.dept_id
+        student_count1=Students.objects.filter(dept_id=dept_id).count()
+        staff_count=Staffs.objects.filter(dept_id=dept_id).count()
+        subject_count=Subjects.objects.filter(dept_id=dept_id).count()
+        
+        subjects = Subjects.objects.filter(dept_id=dept_id)
+        subject_list = []
+        student_count_list_in_subject = []
+        for sub in subjects:
+            subject_list.append(sub.subject_name)
+            count = Students.objects.filter(session_year_id=sub.session_year).count()
+            student_count_list_in_subject.append(count)
+
+        staffs=Staffs.objects.filter(dept_id=dept_id)
+        # for staff in staffs:
+        #     Staffs.objects.filter(id=staff.id).delete()
+        # staffs=Staffs.objects.all()
+        attendance_present_list_staff=[]
+        attendance_absent_list_staff=[]
+        staff_name_list=[]
+        for staff in staffs:
+            subject_ids=Subjects.objects.filter(staff_id=staff.admin.id)
+            attendance=Attendance.objects.filter(subject_id__in=subject_ids).count()
+        #LeaveReport       
+            custom_user = CustomUser.objects.get(id = staff.admin.id)
+            leaves=LeaveReport.objects.filter(user=custom_user,leave_status=1).count()
+            attendance_present_list_staff.append(attendance)
+            attendance_absent_list_staff.append(leaves)
+            staff_name_list.append(staff.admin.username)
+
+        # students_all=Students.objects.all()
+        # for staff in students_all:
+        #     Students.objects.filter(id=staff.id).delete()
+        students_all=Students.objects.filter(dept_id=dept_id)
+        attendance_present_list_student=[]
+        attendance_absent_list_student=[]
+        student_name_list=[]
+        for student in students_all:
+            attendance=AttendanceReport.objects.filter(student_id=student.id,status=True).count()
+            absent=AttendanceReport.objects.filter(student_id=student.id,status=False).count()
+            # LeaveReportStudentl
+            custom_user = CustomUser.objects.get(id = student.admin.id)
+            leaves=LeaveReport.objects.filter(user=custom_user,leave_status=1).count()
+            attendance_present_list_student.append(attendance)
+            attendance_absent_list_student.append(leaves+absent)
+            student_name_list.append(student.admin.username)
+
+        post_count = Post.objects.filter(author=request.user.id).count()
+        return render(request,"hod_template/home_content.html",{"post_count":post_count,"student_count":student_count1,"staff_count":staff_count,"subject_count":subject_count,"student_count_list_in_subject":student_count_list_in_subject,"subject_list":subject_list,"staff_name_list":staff_name_list,"attendance_present_list_staff":attendance_present_list_staff,"attendance_absent_list_staff":attendance_absent_list_staff,"student_name_list":student_name_list,"attendance_present_list_student":attendance_present_list_student,"attendance_absent_list_student":attendance_absent_list_student})
 
 
-def student_home(request):
-    student_obj=Students.objects.get(admin=request.user.id)
-    attendance_total=AttendanceReport.objects.filter(student_id=student_obj).count()
-    attendance_present=AttendanceReport.objects.filter(student_id=student_obj,status=True).count()
-    attendance_absent=AttendanceReport.objects.filter(student_id=student_obj,status=False).count()
-    course=Courses.objects.get(id=student_obj.course_id.id)
-    subjects=Subjects.objects.filter(course_id=course).count()
-    subjects_data=Subjects.objects.filter(course_id=course)
-    session_obj=SessionYearModel.object.get(id=student_obj.session_year_id.id)
-    class_room=OnlineClassRoom.objects.filter(subject__in=subjects_data,is_active=True,session_years=session_obj)
+# def add_staff(request):
+#     return render(request,"hod_template/add_staff_template.html")
 
-    subject_name=[]
-    data_present=[]
-    data_absent=[]
-    subject_data=Subjects.objects.filter(course_id=student_obj.course_id)
-    for subject in subject_data:
-        attendance=Attendance.objects.filter(subject_id=subject.id)
-        attendance_present_count=AttendanceReport.objects.filter(attendance_id__in=attendance,status=True,student_id=student_obj.id).count()
-        attendance_absent_count=AttendanceReport.objects.filter(attendance_id__in=attendance,status=False,student_id=student_obj.id).count()
-        subject_name.append(subject.subject_name)
-        data_present.append(attendance_present_count)
-        data_absent.append(attendance_absent_count)
+# def add_staff_save(request):
+#     if request.method!="POST":
+#         return HttpResponse("Method Not Allowed")
+#     else:
+#         first_name=request.POST.get("first_name")
+#         last_name=request.POST.get("last_name")
+#         username=request.POST.get("username")
+#         email=request.POST.get("email")
+#         password=request.POST.get("password")
+#         address=request.POST.get("address")
+#         try:
+#             user=CustomUser.objects.create_user(username=username,password=password,email=email,last_name=last_name,first_name=first_name,user_type=2)
+#             user.staff.address=address
+#             user.save()
+#             messages.success(request,"Successfully Added Staff")
+#             return HttpResponseRedirect(reverse("add_staff"))
+#         except:
+#             messages.error(request,"Failed to Add Staff")
+#             return HttpResponseRedirect(reverse("add_staff"))
 
-    return render(request,"student_template/student_home_template.html",{"total_attendance":attendance_total,"attendance_absent":attendance_absent,"attendance_present":attendance_present,"subjects":subjects,"data_name":subject_name,"data1":data_present,"data2":data_absent,"class_room":class_room})
+# def add_student(request):
+#     return render(request,"hod_template/add_student_template.html")
+
+# def add_student_save(request):
+#     if request.method!="POST":
+#         return HttpResponse("Method Not Allowed")
+#     else:
+#         first_name=request.POST.get("first_name")
+#         last_name=request.POST.get("last_name")
+#         username=request.POST.get("username")
+#         email=request.POST.get("email")
+#         password=request.POST.get("password")
+#         address=request.POST.get("address")
+#         try:
+#             user=CustomUser.objects.create_user(username=username,password=password,email=email,last_name=last_name,first_name=first_name,user_type=3)
+#             user.student.address=address
+#             user.save()
+#             messages.success(request,"Successfully Added Student")
+#             return HttpResponseRedirect(reverse("add_student"))
+#         except:
+#             messages.error(request,"Failed to Add Student")
+#             return HttpResponseRedirect(reverse("add_student"))
 
 
 
-def student_view_attendance(request):
-    student=Students.objects.get(admin=request.user.id)
-    course=student.course_id
-    subjects=Subjects.objects.filter(course_id=course)
-    return render(request,"student_template/student_view_attendance.html",{"subjects":subjects})
+def add_subject(request):
+    departments=Department.objects.all()
+    session_year=SessionYearModel.objects.all()
+    staffs=CustomUser.objects.filter(user_type=2) | CustomUser.objects.filter(user_type=1)
+    return render(request,"hod_template/add_subject_template.html",{"staffs":staffs,"departments":departments,'session_years':session_year})
 
-def student_view_attendance_post(request):
-    subject_id=request.POST.get("subject")
-    start_date=request.POST.get("start_date")
-    end_date=request.POST.get("end_date")
-
-    start_data_parse=datetime.datetime.strptime(start_date,"%Y-%m-%d").date()
-    end_data_parse=datetime.datetime.strptime(end_date,"%Y-%m-%d").date()
-    subject_obj=Subjects.objects.get(id=subject_id)
-    user_object=CustomUser.objects.get(id=request.user.id)
-    stud_obj=Students.objects.get(admin=user_object)
-
-    attendance=Attendance.objects.filter(attendance_date__range=(start_data_parse,end_data_parse),subject_id=subject_obj)
-    attendance_reports=AttendanceReport.objects.filter(attendance_id__in=attendance,student_id=stud_obj)
-    return render(request,"student_template/student_attendance_data.html",{"attendance_reports":attendance_reports})
-
-def student_apply_leave(request):
-    staff_obj = Students.objects.get(admin=request.user.id)
-    leave_data=LeaveReportStudent.objects.filter(student_id=staff_obj)
-    return render(request,"student_template/student_apply_leave.html",{"leave_data":leave_data})
-
-def student_apply_leave_save(request):
+def add_subject_save(request):
     if request.method!="POST":
-        return HttpResponseRedirect(reverse("student_apply_leave"))
-    else:
-        leave_date=request.POST.get("leave_date")
-        leave_msg=request.POST.get("leave_msg")
-
-        student_obj=Students.objects.get(admin=request.user.id)
-        try:
-            leave_report=LeaveReportStudent(student_id=student_obj,leave_date=leave_date,leave_message=leave_msg,leave_status=0)
-            leave_report.save()
-            messages.success(request, "Successfully Applied for Leave")
-            return HttpResponseRedirect(reverse("student_apply_leave"))
-        except:
-            messages.error(request, "Failed To Apply for Leave")
-            return HttpResponseRedirect(reverse("student_apply_leave"))
-
-
-def student_feedback(request):
-    staff_id=Students.objects.get(admin=request.user.id)
-    feedback_data=FeedBackStudent.objects.filter(student_id=staff_id)
-    return render(request,"student_template/student_feedback.html",{"feedback_data":feedback_data})
-
-def student_feedback_save(request):
-    if request.method!="POST":
-        return HttpResponseRedirect(reverse("student_feedback"))
-    else:
-        feedback_msg=request.POST.get("feedback_msg")
-
-        student_obj=Students.objects.get(admin=request.user.id)
-        try:
-            feedback=FeedBackStudent(student_id=student_obj,feedback=feedback_msg,feedback_reply="")
-            feedback.save()
-            messages.success(request, "Successfully Sent Feedback")
-            return HttpResponseRedirect(reverse("student_feedback"))
-        except:
-            messages.error(request, "Failed To Send Feedback")
-            return HttpResponseRedirect(reverse("student_feedback"))
-
-def student_profile(request):
-    user=CustomUser.objects.get(id=request.user.id)
-    student=Students.objects.get(admin=user)
-    return render(request,"student_template/student_profile.html",{"user":user,"student":student})
-
-def student_profile_save(request):
-    if request.method!="POST":
-        return HttpResponseRedirect(reverse("student_profile"))
-    else:
-        first_name=request.POST.get("first_name")
-        last_name=request.POST.get("last_name")
-        password=request.POST.get("password")
-        address=request.POST.get("address")
-        try:
-            customuser=CustomUser.objects.get(id=request.user.id)
-            customuser.first_name=first_name
-            customuser.last_name=last_name
-            if password!=None and password!="":
-                customuser.set_password(password)
-            customuser.save()
-
-            student=Students.objects.get(admin=customuser)
-            student.address=address
-            student.save()
-            messages.success(request, "Successfully Updated Profile")
-            return HttpResponseRedirect(reverse("student_profile"))
-        except:
-            messages.error(request, "Failed to Update Profile")
-            return HttpResponseRedirect(reverse("student_profile"))
-
-
-def student_view_result(request):
-    student=Students.objects.get(admin=request.user.id)
-    studentresult=StudentResult.objects.filter(student_id=student.id)
-    return render(request,"student_template/student_result.html",{"studentresult":studentresult})
-
-
-
-# ///////////////////////////////////////
-
-
-def add_post(request):
-    form = PostForm()
-    if request.method != 'POST':
-        return render(request,'student_template/add_post.html',{'form' : form})
-    else:
-        form = PostForm(request.POST)
-        if form.is_valid():
-            user_id = request.user.id
-            title = form.cleaned_data['title']
-            title_tag = form.cleaned_data['title_tag']
-            body = form.cleaned_data['body']
-            category = form.cleaned_data['category']
-            user = CustomUser.objects.get(id=user_id)
-            try:
-                post = Post(title=title,title_tag=title_tag,body=body,author=user,category=category)
-                post.save()
-                messages.success(request,"Successfully Added Post")
-            except:
-                messages.error(request,"Failed to added Post")
-            return HttpResponseRedirect(reverse("add_post_for_students"))
-
-def edit_post(request,post_id):
-    request.session['post_id']=post_id
-    post=Post.objects.get(id=post_id)
-    form=EditForm()
-    form.fields['title'].initial=post.title
-    form.fields['title_tag'].initial=post.title_tag
-    form.fields['body'].initial=post.body
-    form.fields['category'].initial=post.category
-    return render(request,"student_template/edit_post.html",{"form":form,"id":post_id})
-
-def edit_post_save(request):
-    form = EditForm()
-    if request.method != "POST":
         return HttpResponse("<h2>Method Not Allowed</h2>")
     else:
-        post_id=request.session.get("post_id")
-        if post_id==None:
-            return HttpResponseRedirect(reverse("manage_post_for_students"))
-
-        form = EditForm(request.POST)
-        if form.is_valid():
-            user_id = request.user.id
-            title = form.cleaned_data['title']
-            title_tag = form.cleaned_data['title_tag']
-            body = form.cleaned_data['body']
-            category = form.cleaned_data['category']
-            user = CustomUser.objects.get(id=user_id)
-            try:
-                post = Post.objects.get(id=post_id)
-                post.title = title
-                post.title_tag = title_tag
-                post.body = body
-                post.category = category
-                post.save()
-                del request.session['post_id']
-                messages.success(request,"Successfully post edited")
-            except:
-                messages.error(request,"Failed to edit post")
-            return HttpResponseRedirect(reverse("edit_post_for_students",kwargs={"post_id":post_id}))
-
-
-def add_tag(request):
-    return render(request,"student_template/add_tag.html")
-
-def add_tag_save(request):
-    if request.method!="POST":
-        return HttpResponse("Method Not Allowed")
-    else:
-        tag=request.POST.get("tag")
+        subject_name=request.POST.get("subject_name")
+        course_id=request.POST.get("department")
+        session_id = request.POST.get('session')
+        department=Department.objects.get(id=course_id)
+        staff_id=request.POST.get("staff")
+        staff=CustomUser.objects.get(id=staff_id)
+        session_year_id = SessionYearModel.objects.get(id=session_id)
         try:
-            tag_model=Post_category(name=tag)
-            tag_model.save()
-            messages.success(request,"Successfully tag Added")
-            return HttpResponseRedirect(reverse("add_tag_for_students"))
-        except Exception as e:
-            messages.error(request,"Failed To Add tag")
-            return HttpResponseRedirect(reverse("add_tag_for_students"))
+            subject=Subjects(subject_name=subject_name,dept_id=department,staff_id=staff,session_year=session_year_id)
+            subject.save()
+            messages.success(request,"Successfully Added Subject")
+            return HttpResponseRedirect(reverse("add_subject"))
+        except:
+            messages.error(request,"Failed to Add Subject")
+            return HttpResponseRedirect(reverse("add_subject"))
+
+
+
+def manage_student(request):
+    students=Students.objects.all()
+    context = {}
+    pagination_req,students = Pagination_handle(request,students)
+    context['pagination_req'] = pagination_req
+    context['students'] = students
+    return render(request,"hod_template/manage_student_template.html",context)
+
+
+
+def manage_subject(request):
+    subjects=Subjects.objects.all()
+    context = {}
+    pagination_req,subjects = Pagination_handle(request,subjects)
+    context['pagination_req'] = pagination_req
+    context['subjects'] = subjects
+    return render(request,"hod_template/manage_subject_template.html",context)
+
+
+
+
+def edit_student(request,student_id):
+    heading_text = "Student"
+    if request.user.id == student_id:
+        heading_text = "Profile"
+    request.session['student_id']=student_id
+    student=Students.objects.get(admin=student_id)
+    form=EditStudentForm()
+    form.fields['email'].initial=student.admin.email
+    form.fields['first_name'].initial=student.admin.first_name
+    form.fields['last_name'].initial=student.admin.last_name
+    form.fields['username'].initial=student.admin.username
+    form.fields['address'].initial=student.address
+    form.fields['course'].initial=student.dept_id.id
+    form.fields['sex'].initial=student.gender
+    form.fields['session_year'].initial=student.session_year_id
+    return render(request,"edit_profile.html",{'action_path':'edit_student_save','id' : student_id,"form":form,"student":student,'name' : heading_text})
+
+def edit_student_save(request):
+    if request.method!="POST":
+        return HttpResponse("<h2>Method Not Allowed</h2>")
+    else:
+        profile = False
+        student_id=request.session.get("student_id")
+        heading_text = "Student"
+        if request.user.id == student_id:
+            heading_text = "Profile"
+            profile = True
+        if student_id==None:
+            if profile:
+                return HttpResponseRedirect(reverse("student_home"))
+            return HttpResponseRedirect(reverse("manage_student"))
+        
+        form=EditStudentForm(request.POST,request.FILES)
+        if form.is_valid():
+            first_name = form.cleaned_data["first_name"]
+            last_name = form.cleaned_data["last_name"]
+            username = form.cleaned_data["username"]
+            email = form.cleaned_data["email"]
+            address = form.cleaned_data["address"]
+            session_year_id = form.cleaned_data["session_year"]
+            course_id = form.cleaned_data["course"]
+            sex = form.cleaned_data["sex"]
+
+            if request.FILES.get('profile_pic',False):
+                profile_pic=request.FILES['profile_pic']
+                fs=FileSystemStorage()
+                filename=fs.save(profile_pic.name,profile_pic)
+                profile_pic_url=fs.url(filename)
+            else:
+                profile_pic_url=None
+            try:
+                user=CustomUser.objects.get(id=student_id)
+                user.first_name=first_name
+                user.last_name=last_name
+                user.username=username
+                user.email=email
+                user.save()
+
+                student=Students.objects.get(admin=student_id)
+                student.address=address
+                session_year = SessionYearModel.objects.get(id=session_year_id)
+                student.session_year_id=session_year
+                student.gender=sex
+                course=Department.objects.get(id=course_id)
+                student.dept_id=course
+                if profile_pic_url!=None:
+                    student.profile_pic=profile_pic_url
+                student.save()
+                del request.session['student_id']
+                messages.success(request,"Successfully Edited Student")
+                if profile:
+                    return HttpResponseRedirect(reverse("student_home"))
+                return HttpResponseRedirect(reverse("edit_student",kwargs={"student_id":student_id}))
+            except:
+                messages.error(request,"Failed to Edit Student")
+                if profile:
+                    return HttpResponseRedirect(reverse("student_home"))
+                return HttpResponseRedirect(reverse("edit_student",kwargs={"student_id":student_id}))
+        else:
+            form=EditStudentForm(request.POST)
+            student=Students.objects.get(admin=student_id)
+            return render(request,"edit_profile.html",{'action_path':'edit_student_save',"form":form,"id":student_id,"name":heading_text})
+
+
+
+def edit_subject(request,subject_id):
+    subject=Subjects.objects.get(id=subject_id)
+    departments=Department.objects.all()
+    staffs=CustomUser.objects.filter(user_type=2) | CustomUser.objects.filter(user_type=1)
+    session_years = SessionYearModel.objects.all() 
+    return render(request,"hod_template/edit_subject_template.html",{"subject":subject,"staffs":staffs,"departments":departments,"id":subject_id,'session_years':session_years})
+
+def edit_subject_save(request):
+    if request.method!="POST":
+        return HttpResponse("<h2>Method Not Allowed</h2>")
+    else:
+        subject_id=request.POST.get("subject_id")
+        subject_name=request.POST.get("subject_name")
+        staff_id=request.POST.get("staff")
+        session_year = request.POST.get('session')
+        dept_id=request.POST.get("department")
+
+        try:
+            subject=Subjects.objects.get(id=subject_id)
+            subject.subject_name=subject_name
+            staff=CustomUser.objects.get(id=staff_id)
+            subject.staff_id=staff
+            session_year_id = SessionYearModel.objects.get(id=session_year)
+            department=Department.objects.get(id=dept_id)
+            subject.dept_id=department
+            subject.session_year_id = session_year_id
+            subject.save()
+
+            messages.success(request,"Successfully Edited Subject")
+            return HttpResponseRedirect(reverse("edit_subject",kwargs={"subject_id":subject_id}))
+        except:
+            messages.error(request,"Failed to Edit Subject")
+            return HttpResponseRedirect(reverse("edit_subject",kwargs={"subject_id":subject_id}))
 
 
 
 
 
 
-# class AddPost(CreateView):
-#     model = Post
-#     form_class = PostForm
-#     template_name = 'student_template/add_post.html'
-#     success_url = reverse_lazy('admin_home')
+def student_feedback_message(request):
+    feedbacks = []
+    for student in Students.objects.all():
+        user_obj = CustomUser.objects.get(id = student.admin.id)
+        feedback =FeedBack.objects.filter(user=user_obj)
+        feedbacks += feedback
+    context = {}
+    pagination_req,feedbacks = Pagination_handle(request,feedbacks)
+    context['pagination_req'] = pagination_req
+    context['feedbacks'] = feedbacks
+    return render(request,"hod_template/student_feedback_template.html",context)
 
-# class UpdatePost(UpdateView):
-#     model=Post
-#     form_class = EditForm
-#     template_name = 'student_template/edit_post.html'
-#     success_url = reverse_lazy('admin_home')
+@csrf_exempt
+def student_feedback_message_replied(request):
+    feedback_id=request.POST.get("id")
+    feedback_message=request.POST.get("message")
 
-class DeletePost(DeleteView):
-    model = Post
-    template_name = 'student_template/delete_post.html'
-    success_url = reverse_lazy('student_home')
+    try:
+        feedback=FeedBack.objects.get(id=feedback_id)
+        feedback.feedback_reply=feedback_message
+        feedback.save()
+        return HttpResponse("True")
+    except:
+        return HttpResponse("False")
 
-def manage_post(request):
-    posts=Post.objects.filter(author=request.user.id)
-    return render(request,"student_template/manage_post.html",{"posts":posts})
+
+def student_leave_view(request):
+    # LeaveReportStudentl
+    leaves = []
+    for student in Students.objects.all():
+        user_obj = CustomUser.objects.get(id = student.admin.id)
+        leave=LeaveReport.objects.filter(user=user_obj)
+        leaves += leave
+    context = {}
+    pagination_req,leaves = Pagination_handle(request,leaves)
+    context['pagination_req'] = pagination_req
+    context['leaves'] = leaves
+    return render(request,"hod_template/student_leave_view.html",context)
+
+def student_approve_leave(request,leave_id):
+    # LeaveReportStudent
+    leave=LeaveReport.objects.get(id=leave_id)
+    leave.leave_status=1
+    leave.save()
+    return HttpResponseRedirect(reverse("student_leave_view"))
+
+def student_disapprove_leave(request,leave_id):
+    # LeaveReportStudent
+    leave=LeaveReport.objects.get(id=leave_id)
+    leave.leave_status=2
+    leave.save()
+    return HttpResponseRedirect(reverse("student_leave_view"))
+
+
+def admin_view_attendance(request):
+    subjects=Subjects.objects.all()
+    session_year_id=SessionYearModel.objects.all()
+    return render(request,"hod_template/admin_view_attendance.html",{"subjects":subjects,"session_year_id":session_year_id})
+
+@csrf_exempt
+def admin_get_attendance_dates(request):
+    subject=request.POST.get("subject")
+    session_year_id=request.POST.get("session_year_id")
+    subject_obj=Subjects.objects.get(id=subject)
+    session_year_obj=SessionYearModel.object.get(id=session_year_id)
+    attendance=Attendance.objects.filter(subject_id=subject_obj,session_year_id=session_year_obj)
+    attendance_obj=[]
+    for attendance_single in attendance:
+        data={"id":attendance_single.id,"attendance_date":str(attendance_single.attendance_date),"session_year_id":attendance_single.session_year_id.id}
+        attendance_obj.append(data)
+
+    return JsonResponse(json.dumps(attendance_obj),safe=False)
+
+
+@csrf_exempt
+def admin_get_attendance_student(request):
+    attendance_date=request.POST.get("attendance_date")
+    attendance=Attendance.objects.get(id=attendance_date)
+
+    attendance_data=AttendanceReport.objects.filter(attendance_id=attendance)
+    list_data=[]
+
+    for student in attendance_data:
+        data_small={"id":student.student_id.admin.id,"name":student.student_id.admin.first_name+" "+student.student_id.admin.last_name,"status":student.status}
+        list_data.append(data_small)
+    return JsonResponse(json.dumps(list_data),content_type="application/json",safe=False)
+
+
+

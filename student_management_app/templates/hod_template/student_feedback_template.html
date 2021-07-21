@@ -1,4 +1,4 @@
-{% extends 'hod_template/base_template.html' %}
+{% extends 'base_template.html' %}
 {% block page_title %}
 Student Feedback
 {% endblock page_title %}
@@ -9,9 +9,16 @@ Student Feedback
           <div class="row">
               <div class="col-md-12">
             <!-- general form elements -->
-            <div class="card card-primary">
+            <div class="card">
               <div class="card-header">
                 <h3 class="card-title">Student Feedback</h3>
+                {% if pagination_req %}
+                <div class="card-tools">
+                  <ul class="pagination pagination-sm">
+                    {% include 'pagination.html' with blog_posts=feedbacks %}
+                  </ul>
+                </div>
+                {% endif %}
               </div>
               <!-- /.card-header -->
               <!-- form start -->
@@ -29,9 +36,9 @@ Student Feedback
                         {% for feedback in feedbacks %}
                         <tr>
                             <td>{{ feedback.id }}</td>
-                            <td>{{ feedback.student_id.admin.id }}</td>
-                            <td>{{ feedback.student_id.admin.first_name }} {{ feedback.student_id.admin.last_name }}</td>
-                            <td>{{ feedback.student_id.session_year_id.session_start_year }} - {{ feedback.student_id.session_year_id.session_end_year }}</td>
+                            <td>{{ feedback.user.id }}</td>
+                            <td>{{ feedback.user.first_name }} {{ feedback.user.last_name }}</td>
+                            <td>{{ feedback.user.student.session_year_id.session_start_year }} - {{ feedback.user.student.session_year_id.session_end_year }}</td>
                             <td>{{ feedback.feedback }}</td>
                             <td>{{ feedback.created_at }}</td>
                             <td>

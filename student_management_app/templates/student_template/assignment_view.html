@@ -1,0 +1,161 @@
+{% extends 'base_template.html' %}
+{% block page_title %}
+Assignment View
+{% endblock page_title %}
+{% block main_content %}
+    <section class="content">
+      <div class="container-fluid">
+        <div class="form-group">
+            {% if messages %}
+              {% for message in messages %}
+              {% if message.tags == 'error' %}
+              <div class="alert alert-danger" style="margin-top:10px">{{ message }}</div>
+              {% endif %}
+              {% if message.tags == 'success' %}
+              <div class="alert alert-success" style="margin-top:10px">{{ message }}</div>
+              {% endif %}
+              {% endfor %}
+            {% endif %}
+        </div>
+        {% if assignments %}
+        <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Assignment Details</h3>
+                {% if pagination_req %}
+                <div class="card-tools">
+                  <ul class="pagination pagination-sm">
+                    {% include 'pagination.html' with blog_posts=students %}
+                  </ul>
+                </div>
+                {% endif %}
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body table-responsive p-0">
+                <table class="table table-hover text-nowrap">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Subject Name</th>
+                      <th>Staff Name</th>
+                      <th>Upload At</th>
+                      <th>Deadline</th>
+                      <th>View Assignment</th>
+                      <th>Download Assignment</th>
+                      <th>Upload</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  {% for assignment in assignments %}
+                    <tr>
+                      <td>{{ assignment.id }}</td>
+                      <td>{{ assignment.subject_id.subject_name}}</td>
+                      <td>{{ assignment.subject_id.staff_id.username }}</td>
+                      <td>{{ assignment.upload_at }}</td>
+                      <td>{{ assignment.deadline }}</td>
+                      <td>
+                          {% if assignment.assignment %}
+                            <a href="{{ assignment.assignment }}" class="btn btn-outline-primary">View Assignment</a>
+                          {% else %}
+                            <span class="text-muted">No Assignment</span>
+                          {% endif %}
+                      </td>
+                      <td>
+                        {% if assignment.assignment %}
+                          <a href="{{assignment.assignment }}" download class="btn btn-outline-success">
+                        Download Assignment</a>
+                        {% else %}
+                        <span class="text-muted">No PDF</span>
+                        {% endif %}
+                      </td> 
+                      {% if assignment.check_deadline%}
+                      <td>
+                        <a href="{% url 'assignment_submit' assignment.id %}" class="btn btn-success">upload</a>
+                      </td>
+                      {% else %}
+                      <td><p>Deadline over:) please contact with {{ assignment.subject_id.staff_id.username }}</p></td>
+                      {% endif %}
+                    </tr>
+                  {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+          </div>
+        </div>
+          {% endif %}
+
+        {% if submit_assignments %}
+          <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Previous Submitted Assignment Details</h3>
+                {% if pagination_req %}
+                <div class="card-tools">
+                  <ul class="pagination pagination-sm">
+                    {% include 'pagination.html' with blog_posts=submit_assignments %}
+                  </ul>
+                </div>
+                {% endif %}
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body table-responsive p-0">
+                <table class="table table-hover text-nowrap">
+                  
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Assignment ID</th>
+                      <th>Subject Name</th>
+                      <th>Staff Name</th>
+                      <th>Upload At</th>
+                      <th>Deadline</th>
+                      <th>Submit At</th>
+                      <th>View Doc</th>
+                      <th>Download Doc</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  {% for assignment in submit_assignments %}
+                    <tr>
+                      <td>{{ assignment.id }}</td>
+                      <td>{{assignment.assignment.id}}</td>
+                      <td>{{ assignment.assignment.subject_id.subject_name}}</td>
+                      <td>{{ assignment.assignment.subject_id.staff_id.username }}</td>
+                      <td>{{ assignment.assignment.upload_at }}</td>
+                      <td>{{ assignment.assignment.deadline }}</td>
+                      <td>{{assignment.updated_at}}</td>
+                      <td>
+                          {% if assignment.file %}
+                            <a href="{{ assignment.file }}" class="btn btn-outline-primary">View Pdf</a>
+                          {% else %}
+                            <span class="text-muted">No Pdf</span>
+                          {% endif %}
+                      </td>
+                      <td>
+                        {% if assignment.file %}
+                          <a href="{{assignment.file }}" download class="btn btn-outline-success">
+                        Download Pdf</a>
+                        {% else %}
+                        <span class="text-muted">No PDF</span>
+                        {% endif %}
+                      </td> 
+                    </tr>
+                  {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              <!-- /.card-body -->
+            </div>
+            {% endif %}
+            <!-- /.card -->
+          </div>
+        </div>
+      </div>
+    </section>
+{% endblock main_content %}
+

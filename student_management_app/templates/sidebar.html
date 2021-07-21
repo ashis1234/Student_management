@@ -1,0 +1,398 @@
+{% load static %}
+ {% block custom_css %}
+  <style type="text/css">
+    a.active{
+      color: transparent;
+    }
+  </style>
+ {% endblock custom_css %}
+<aside class="main-sidebar sidebar-dark-primary elevation-4">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <!-- Sidebar user panel (optional) -->
+      <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+        <div class="image">
+           {% if user.user_type == '0' %}
+              <img src="{{ user.profilePic }}" class="img-circle elevation-2" alt="User Image">
+           {% elif user.user_type == '1' %}
+                  <img src="{{ user.profilePic }}" class="img-circle elevation-2" alt="User Image">
+            
+            {% elif user.user_type == '2' %} 
+                  <img src="{{user.profilePic}}" class="img-circle elevation-2" alt="User Image">
+              
+            {% else %}
+                <img src="{{user.profilePic}}" class="img-circle elevation-2" alt="User Image">
+              
+            {% endif %} 
+        </div>
+        <div class="info">
+          {% if user.user_type == '0' %}
+            <a href="{% url 'edit_hod' user.id %}" class="d-block">{{ user.username }}</a>
+          {% elif user.user_type == '1' %}
+            <a href="{% url 'edit_staff' user.id %}" class="d-block">{{ user.username }}</a>
+          {% elif user.user_type == '2' %}
+            <a href="{% url 'edit_staff' user.id %}" class="d-block">{{ user.username }}</a>
+          {% else %}
+            <a href="{% url 'edit_student' user.id %}" class="d-block">{{ user.username }}</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Sidebar Menu -->
+      <nav class="mt-2">
+        <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+          <li class="nav-item">
+            {% if user.user_type == '0' %}
+              {% url 'principal_home' as principal_home %}
+              <a href="{{ principal_home }}" class="nav-link {% if request.path == principal_home %} active {% endif %}">
+            {% elif user.user_type == '1' %}
+              {% url 'admin_home' as admin_home %}
+              <a href="{{ admin_home }}" class="nav-link {% if request.path == admin_home %} active {% endif %}">
+            {% elif user.user_type == '2' %}
+              {% url 'staff_home' as staff_home %}
+              <a href="{{ staff_home }}" class="nav-link {% if request.path == staff_home %} active {% endif %}">
+            {% else %}
+              {% url 'student_home' as student_home %}
+              <a href="{{ student_home }}" class="nav-link {% if request.path == student_home %} active {% endif %}">
+            {% endif %}
+              <i class="nav-icon fas fa-th"></i>
+              <p>
+                Home
+              </p>
+            </a>
+          </li>
+
+          <!-- Post Sections -->
+          <li class="nav-item has-treeview" id='post-url'>
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-copy"></i>
+              <p>
+                BLOG POST
+                <i class="fas fa-angle-left right"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                 {% url 'add_post' as add_post %}
+                  <a href="{% url 'add_post' %}" class="nav-link {% if request.path == add_post %} active {% endif %}">
+                    <i class="nav-icon far fa-plus-square"></i>
+                    <p>
+                      Add post
+                    </p>
+                  </a>
+              </li>
+              <li class="nav-item">
+                 {% url 'manage_post' as manage_post %}
+                  {% url 'edit_post'  as edit_post %}
+                  <a href="{% url 'manage_post' %}" class="nav-link {% if request.path == manage_post %} active {% endif %} {% if request.path == edit_post %} active {% endif %}">
+                  <i class="nav-icon fas fa-edit"></i>
+                  <p>
+                    Manage Posts
+                  </p>
+                </a>
+              </li>
+              {% if user.user_type != '3' %}
+              <li class="nav-item">
+                 {% url 'manage_category' as manage_category %}
+                  <a href="{% url 'manage_category' %}" class="nav-link {% if request.path == manage_category %} active {% endif %}">
+                  <i class="nav-icon fas fa-edit"></i>
+                  <p>
+                    Manage Category
+                  </p>
+                </a>
+              </li>
+              {% endif %}
+            </ul>
+          </li>
+
+
+          <!-- end post section -->
+          {% if user.user_type == '0' %}
+          <!-- Staff Section -->
+          <li class="nav-item has-treeview">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-copy"></i>
+              <p>
+                Staff
+                <i class="fas fa-angle-left right"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+                <li class="nav-item">
+                  {% url 'manage_staff' as manage_staff %}
+                  {% url 'edit_staff' staff_id=id as edit_staff %}
+                  <a href="{% url 'manage_staff' %}" class="nav-link {% if request.path == manage_staff %} active {% endif %} {% if request.path == edit_staff %} active {% endif %}">
+                    <i class="nav-icon fas fa-th"></i>
+                    <p>
+                      Manage Staff
+                    </p>
+                  </a>
+              </li>
+              <li class="nav-item">
+               {% url 'staff_feedback_message' as staff_feedback_message %}
+                <a href="{% url 'staff_feedback_message' %}" class="nav-link {% if request.path == staff_feedback_message %} active {% endif %}">
+                  <i class="nav-icon fas fa-th"></i>
+                  <p>
+                    Staff Feedback
+                  </p>
+                </a>
+              </li>
+              <li class="nav-item">
+                 {% url 'staff_leave_view' as staff_leave_view %}
+                  <a href="{% url 'staff_leave_view' %}" class="nav-link {% if request.path == staff_leave_view %} active {% endif %}">
+                  <i class="nav-icon fas fa-th"></i>
+                  <p>
+                    Staff Leave
+                  </p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-item has-treeview">
+              <a href="#" class="nav-link">
+                <i class="nav-icon fas fa-copy"></i>
+                <p>
+                  DepartMent
+                  <i class="fas fa-angle-left right"></i>
+                </p>
+              </a>
+              <ul class="nav nav-treeview">
+                <li class="nav-item">
+                  {% url 'add_department' as add_department %}
+                  <a href="{% url 'add_department' %}" class="nav-link {% if request.path == add_department %} active {% endif %}">
+                    <i class="nav-icon fas fa-th"></i>
+                    <p>
+                      Add DepartMent
+                    </p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  {% url 'manage_department' as manage_department %}
+                    {% url 'edit_department' department_id=id as edit_department %}
+                  <a href="{% url 'manage_department' %}" class="nav-link {% if request.path == manage_department %} active {% endif %} {% if request.path == edit_department %} active {% endif %}">
+                    <i class="nav-icon fas fa-th"></i>
+                    <p>
+                      Manage DepartMent
+                    </p>
+                  </a>
+                </li>
+            
+          <li class="nav-item">
+              {% url 'manage_session' as manage_session %}
+              <a href="{% url 'manage_session' %}" class="nav-link {% if request.path == manage_session %} active {% endif %} ">
+                <i class="nav-icon fas fa-th"></i>
+                <p>
+                  Add Session Year
+                </p>
+              </a>
+            </li>
+            </ul>
+          </li>
+          {% endif %}
+
+        {% if user.user_type == '1' or user.user_type == '0' %}
+          
+          <li class="nav-item has-treeview">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-copy"></i>
+              <p>
+                Students
+                <i class="fas fa-angle-left right"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                  {% url 'manage_student' as manage_student %}
+                  {% url 'edit_student' student_id=id as edit_student %}
+                <a href="{% url 'manage_student' %}" class="nav-link {% if request.path == manage_student %} active {% endif %} {% if request.path == edit_student %} active {% endif %}">
+                  <i class="nav-icon fas fa-th"></i>
+                  <p>
+                    Manage Students
+                  </p>
+                </a>
+              </li>
+              {% if user.user_type == '1' %}
+              <li class="nav-item">
+               {% url 'student_feedback_message' as student_feedback_message %}
+              <a href="{% url 'student_feedback_message' %}" class="nav-link {% if request.path == student_feedback_message %} active {% endif %}">
+                <i class="nav-icon fas fa-th"></i>
+                <p>
+                  Student Feedback
+                </p>
+              </a>
+            </li>
+             
+             <li class="nav-item">
+                 {% url 'student_leave_view' as student_leave_view %}
+              <a href="{% url 'student_leave_view' %}" class="nav-link {% if request.path == student_leave_view %} active {% endif %}">
+                <i class="nav-icon fas fa-th"></i>
+                <p>
+                  Student Leave
+                </p>
+              </a>
+            </li>
+
+              
+            <li class="nav-item">
+              {% url 'admin_view_attendance' as admin_view_attendance %}
+               <a href="{% url 'admin_view_attendance' %}" class="nav-link {% if request.path == admin_view_attendance %} active {% endif %}">
+                <i class="nav-icon fas fa-th"></i>
+                <p>
+                  View Attendance
+                </p>
+              </a>
+            </li>
+            {%  endif %}
+          </ul>
+        </li>
+        {% endif %}
+        <!-- end student section -->
+        <!-- Course Section -->
+        {% if user.user_type == '1' or user.user_type == '2' %}
+        <li class="nav-item has-treeview">
+          <a href="#" class="nav-link">
+            <i class="nav-icon fas fa-copy"></i>
+            <p>
+              Subjects
+              <i class="fas fa-angle-left right"></i>
+            </p>
+          </a>
+          <ul class="nav nav-treeview">
+            
+            <li class="nav-item">
+              {% url 'add_subject' as add_subject %}
+              <a href="{% url 'add_subject' %}" class="nav-link {% if request.path == add_subject %} active {% endif %}">
+                <i class="nav-icon fas fa-th"></i>
+                <p>
+                  Add Subject
+                </p>
+              </a>
+            </li>
+            <li class="nav-item">
+              {% url 'manage_subject' as manage_subject %}
+              {% url 'edit_subject' subject_id=id as edit_subject %}
+              <a href="{% url 'manage_subject' %}" class="nav-link {% if request.path == manage_subject %} active {% endif %} {% if request.path == edit_subject %} active {% endif %} ">
+                <i class="nav-icon fas fa-th"></i>
+                <p>
+                  Manage Subject
+                </p>
+              </a>
+            </li>
+          </ul>
+        </li>
+        {% endif %}
+        <!-- Staff take Attendance -->
+        {% if user.user_type == '2' or user.user_type == '1' %}
+        <li class="nav-item has-treeview">
+          <a href="#" class="nav-link">
+            <i class="nav-icon fas fa-copy"></i>
+            <p>
+              Attendance
+              <i class="fas fa-angle-left right"></i>
+            </p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item">
+              {% url 'staff_take_attendance' as staff_take_attendance %}
+              <a href="{{ staff_take_attendance }}" class="nav-link {% if request.path == staff_take_attendance %} active {% endif %}">
+                <i class="nav-icon fas fa-th"></i>
+                <p>
+                  Take Attendance
+                </p>
+              </a>
+            </li>
+             
+             <li class="nav-item">
+              {% url 'staff_update_attendance' as staff_update_attendance %}
+              <a href="{{ staff_update_attendance }}" class="nav-link {% if request.path == staff_update_attendance %} active {% endif %}">
+                <i class="nav-icon fas fa-th"></i>
+                <p>
+                  View Update Attendance
+                </p>
+              </a>
+            </li>
+             </ul>
+          </li>
+          <li class="nav-item has-treeview">
+          <a href="#" class="nav-link">
+            <i class="nav-icon fas fa-copy"></i>
+            <p>
+              Assignment
+              <i class="fas fa-angle-left right"></i>
+            </p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item">
+              {% url 'assignment_upload' as assignment_upload %}
+              <a href="{{ assignment_upload }}" class="nav-link {% if request.path == assignment_upload %} active {% endif %}">
+                <i class="nav-icon fas fa-th"></i>
+                <p>
+                  Assignment Add
+                </p>
+              </a>
+            </li>
+            <li class="nav-item">
+              {% url 'assignment_check' as assignment_check %}
+              <a href="{{ assignment_check }}" class="nav-link {% if request.path == assignment_check %} active {% endif %}">
+                <i class="nav-icon fas fa-th"></i>
+                <p>
+                  Assignment Check
+                </p>
+              </a>
+            </li>
+            </ul>
+          </li>
+         
+        <!-- Staff take attendance end -->
+        {% endif %}
+        <!-- student extra -->
+        {% if user.user_type == '3' %}
+         <li class="nav-item">
+            {% url 'student_view_attendance' as student_view_attendance %}
+            {% url 'student_view_attendance_post' as student_view_attendance_post %}
+            <a href="{{ student_view_attendance }}" class="nav-link {% if request.path == student_view_attendance %} active {% endif %} {% if request.path == student_view_attendance_post %} active {% endif %}">
+              <i class="nav-icon fas fa-th"></i>
+              <p>
+                View Attendance
+              </p>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            {% url 'assignment_view' as assignment_view %}
+            <a href="{{ assignment_view }}" class="nav-link {% if request.path == assignment_view %} active {% endif %} {% if request.path == student_view_attendance_post %} active {% endif %}">
+              <i class="nav-icon fas fa-th"></i>
+              <p>
+                Assignment view
+              </p>
+            </a>
+          </li>
+       <!-- student extra end -->
+        {% endif %}
+        
+        {% if user.user_type != '0' %}
+        <li class="nav-item">
+          {% url 'apply_leave' as apply_leave %}
+          <a href="{{ apply_leave }}" class="nav-link {% if request.path == apply_leave %} active {% endif %}">
+            <i class="nav-icon fas fa-th"></i>
+            <p>
+              Apply Leave
+            </p>
+          </a>
+        </li>
+        <li class="nav-item">
+          {% url 'feedback' as feedback %}
+          <a href="{{ feedback }}" class="nav-link {% if request.path == feedback %} active {% endif %}">
+            <i class="nav-icon fas fa-th"></i>
+            <p>
+              Feedback
+            </p>
+          </a>
+        </li>
+        {% endif %}
+        </ul>
+      </nav>
+      <!-- /.sidebar-menu -->
+    </div>
+    <!-- /.sidebar -->
+  </aside>

@@ -1,76 +1,536 @@
 {% extends 'bash.html' %}
 {% load static %}
 {% load mptt_tags %}
-{%block title%}{{post.title_tag}}{% endblock %}
+{% block title %} {{post.title}}{% endblock %}
+{% block custom_css %}
+<link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+{% endblock custom_css %}
 {% block content %}
-<h1>{{ post.title }}</h1>
-<hr>
-{{post.body | safe}}
-</small>
-<br><br>
-<a href="{% url 'home' %}" class="btn btn-secondary">back</a>
-<br/>
-<hr/>
-<form action="{% url 'like_post' post.pk %}" class="form-group" method="POST">
-  {% csrf_token %}
-  {% if user.is_authenticated %}
-    <button type="submit" name = 'post_id' value ="{{post.id}}" class="btn btn-primary bt-sm">Like</button>
-  {% else %}
-    <p class="btn btn-primary bt-sm" id='like' onMousedown = "myfunction1('like',0)">Like</p>
-  {% endif %}
-</form>
 
+<p style="display:none">{{post.view_added}}</p>
+<div class="container">
+  <div class="row">
+    
+    <div class="col-lg-8">
+      <article>
+        <header class="mb-4">
+            <h1 class="fw-bolder mb-1">{{post.title}}</h1>
+            <div class="text-muted fst-italic mb-2">Posted on {{post.post_date}} by {{post.author}}</div>
+            {% for cat in post.category %}
+              <a href = "{% url 'category' cat %}" class="badge bg-secondary text-decoration-none link-light" >{{cat}}</a>
+            {% endfor %}
+        </header>
+        <figure class="mb-4"><img class="img-fluid rounded" src="https://dummyimage.com/900x400/ced4da/6c757d.jpg" alt="..." /></figure>
+        <section class="mb-5">
+          {{post.body|safe}}
+        </section>
 
-<form action="{% url 'dislike_post' post.pk %}" class="form-group" method="POST">
-  {% csrf_token %}
-  {% if user.is_authenticated %}
-    <button type="submit" name = 'post_id1' value ="{{post.id}}" class="btn btn-danger bt-sm">DisLike</button>
-  {% else %}
-    <p id='dislike' class="btn btn-danger bt-sm" onMousedown = "myfunction1('dislike',1)">Dislike</p>
-  {% endif %}
-</form>
-<strong>Contribution:{{total_likes}}</strong>
-
-
-
-
-
-
-
-
-<!-- comment section -->
-
-<h1>Comments........</h1>
-<div>
-  {% if user.is_authenticated %}
-    <button class="my-7" onclick = "myfunction(0,this.id)" id ="button_0">Add Comment</button>
-  {% else %}
-    <button class="my-7" onclick = "myfunction1(this.id,2)" id ="button_0">Add Comment</button>
-  {% endif %}
-</div>
-<hr/>
-<div class="my-20 p-10">
-  {% recursetree comments %}
-    <div id="node_{{node.id}}" class="my-2 p-2" style="border: 1px solid grey">
-      <div class="d-flex bd-highlight">
-        
-        <div class="float-right">{{node.timestamp}}</div>
-      </div>
-      {{node.content}}<br/>
-      {{node.id}}<br/>
-      {{node.parent_id}}<br/>
-      {% if user.is_authenticated %}
-        <button class="button" onclick = "myfunction({{node.id }},this.id)" id ="button_{{node.id}}">Reply</button>      
-      {% else %}
-        <button class="button" onclick = "myfunction1(this.id,2)" id ="button_{{node.id}}">Reply</button>
-      {% endif %}
+      </article>
+    <div class="roundbox meta">
+        <div class="left-meta">
+            <ul>
+              <li style="vertical-align:middle;position:relative;top:-5px">       
+                <p id="like-post" style="cursor: pointer;">
+                  <span style="font-size:50px; color: green;" class="material-icons">arrow_drop_up</span>
+                </p>
+              </li>
+              <li style="vertical-align:middle;position:relative;top:-5px">
+                {% if post.total_likes_pos %}
+                  <span title="Topic rating" style="font-size:30px;font-weight:bold;color:green">{{post.total_likes}}</span>
+                   {% else %}
+                  <span title="Topic rating" style="font-size:30px;font-weight:bold;color:grey">{{post.total_likes}}</span>
+                  {% endif %}
+              </li>
+              <li style="vertical-align:middle;position:relative;top:-5px">        
+                <p id = "dislike-post" style="cursor: pointer;">
+                  <span style="font-size:50px; color: darkred;" class="material-icons">arrow_drop_down</span>
+                </p>
+              </li>
+            </ul>
+        </div>
+        <div class="right-meta">
+            <ul>
+                <li style="vertical-align:middle;position:relative;top:2px">        
+                  <a href="{% url 'user_profile' post.author %}"><span  class="material-icons">account_circle</span></a>
+                  <a style="vertical-align:middle;position:relative;top:-7px" href="{% url 'user_profile' post.author %}">{{post.author}}</a>
+                </li>
+                <li>        
+                  <img style="margin-left: 4px; vertical-align:middle;position:relative;top:2px" src="//codeforces.org/s/36497/images/blog/date_16x16.png" alt="Publication date" title="Publication date">
+                  <span style="vertical-align:middle;position:relative;top:2px" class="format-humantime">{{post.whenpublished}}</span>
+                </li>
+            </ul>
+        </div>
     </div>
-    {% if not node.is_leaf_node %}
-      <div class="children pl-2 pl-md-5">
-          {{ children }}
+    <div id="post-notify"></div>
+  </div>
+  <div class="col-lg-4 ftco-animate bg-light pt-5 fadeInUp ftco-animated">
+      <div class="card mb-4">
+          <div class="card-header">
+            Featured Post
+            <a href="{% url 'featured_articles' %}">...view all</a>
+          </div>
+          <div class="card-body">
+              <div class="row">
+                    {% for post in featured_posts %}
+                      <a href="{% url 'article' post.id %}">{{post.title|safe|truncatechars:50}}</a>
+                    {% endfor %}
+              </div>
+          </div>
       </div>
-    {% endif %}
-  {% endrecursetree %}
+      <div class="card mb-4">
+          <div class="card-header">
+            Most Viewed Post
+            <a href="{% url 'most_viewed_articles' %}">...view all</a>
+          </div>
+          <div class="card-body">
+              <div class="row">
+                    {% for post in most_view_posts %}
+                      <a href="{% url 'article' post.id %}">{{post.title|safe|truncatechars:50}}</a>
+                    {% endfor %}
+              </div>
+          </div>
+      </div>
+      <div class="card mb-4">
+          <div class="card-header">Most Like Post
+            <a href="{% url 'most_like_articles' %}">...view all</a>
+          </div>
+          <div class="card-body">
+              <div class="row">
+                    {% for post in most_like_posts %}
+                      <a href="{% url 'article' post.id %}">{{post.title|safe|truncatechars:50}}</a>
+                    {% endfor %}
+              </div>
+          </div>
+      </div>
+      <div class="card mb-4">
+          <div class="card-header">
+            Latest Post
+            <a href="{% url 'latest_articles' %}">...view all</a>
+          </div>
+          <div class="card-body">
+              <div class="row">
+                    {% for post in latest_posts %}
+                      <a href="{% url 'article' post.id %}">{{post.title|safe|truncatechars:50}}</a>
+                    {% endfor %}
+              </div>
 
- </div>
-{% endblock %}
+          </div>
+      </div>
+      <div class="card mb-4">
+          <div class="card-header">
+                Trending Topics              
+          </div>
+          <div class="card-body">
+              <div class="row">
+                <div class="col">
+                    <ul class="tagcloud">
+                      {% for cat in trending_topic1 %}
+                       <a class="tag-cloud-link badge bg-secondary text-decoration-none link-light" href="{% url 'category' cat %}">{{cat.name}}</a>
+                      {% endfor %}
+                    </ul>
+                </div>
+          </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="card">
+  <div class="card-body">
+      <h4 class="card-title">Recent Comments</h4>
+      <ul class="list-inline d-sm-flex my-0">
+        <li class="list-inline-item ml-auto">
+            <a onclick = "myfunction(0)" id ="button_0" class="u-link-v5 g-color-gray-dark-v4 g-color-primary--hover reply_open_modal" href="#!">
+            Write Comment
+          </a>
+        </li>
+      </ul>
+  </div>
+  <hr/>
+  <div class="comment-widgets m-b-20">
+     {% recursetree comments %}
+      <div class="d-flex flex-row comment-row" id = "comment_{{node.id}}">
+          <div class="p-2">
+            <img width="50" height="50" src="{{ node.user.profilePic }}" alt="{{node.user}}_image" />
+            <a href="{% url 'user_profile' node.user %}">{{node.user}}</a>
+          </div>
+          <div class="comment-text w-100">
+              <div class="comment-footer"> 
+                <span class="date">{{node.add_comment}}</span> 
+              </div>
+              <p id = "Edit_{{node.id}}" class="m-b-5 m-t-10">{{node.content}}</p>
+          </div>
+          <ul class="list-inline d-sm-flex my-0">
+                <p hidden>{{node.id}}</p>
+                {% if user.id == node.user.id %}
+
+                  <li class="list-inline-item g-mr-20">
+                  <p style="color:blue;cursor:pointer;" onclick="Editfunction({{node.id}})" class="u-link-v5 g-color-gray-dark-v4 g-color-primary--hover" id="button_{{node.id}}" href="#!">
+                    <i class="fa fa-pencil"></i>
+                  </p>
+                </li>
+                {% endif %}
+                <li class="list-inline-item g-mr-20">
+                  <p style="color:blue;cursor:pointer;" id = "like-comment" class="u-link-v5 g-color-gray-dark-v4 g-color-primary--hover" href="#!">
+                    <i class="fa fa-thumbs-up g-pos-rel g-top-1 g-mr-3"></i>
+                    {{node.get_likes}}
+                  </p>
+                </li>
+                <li class="list-inline-item g-mr-20">
+                  <p style="color:blue;cursor:pointer;" id = "dislike-comment" class="u-link-v5 g-color-gray-dark-v4 g-color-primary--hover" href="#!">
+                    <i class="fa fa-thumbs-down g-pos-rel g-top-1 g-mr-3"></i>
+                    {{node.get_dislikes}}
+                  </p>
+                </li>
+                <li class="list-inline-item ml-auto">
+                  <a onclick = "myfunction({{node.id }})" id ="button_{{node.id}}" class="u-link-v5 g-color-gray-dark-v4 g-color-primary--hover reply_open_modal" href="#!">
+                    <i class="fa fa-reply g-pos-rel g-top-1 g-mr-3"></i>
+                    Reply
+                  </a>
+                </li>
+              </ul>
+      </div>
+      <div id=cmnt_notify_{{node.id}}></div>
+      {% if not node.is_leaf_node %}
+        <div style="margin-left: 50px; margin-top: 20px;">
+            {{ children }}
+        </div>
+      {% endif %}
+      {% endrecursetree %}
+    </div>
+  </div>
+</div>
+     
+
+
+{% endblock content %}
+{% block custom_js %}
+
+<script>
+  let parent_div,node_id = 0,s;
+  function myfunction(id){
+    if(document.contains(document.getElementById('newForm'))){
+        document.getElementById('newForm').remove();
+    }
+    parent_div = document.getElementById("button_"+id).parentElement.parentElement.parentElement;
+    var user = "{{user}}"; 
+    if(user == 'AnonymousUser'){
+        s = `<div class="alert alert-warning alert-dismissible fade show" role="alert">
+              <strong>Hey Reader!</strong> <a href="{% url 'show_login' %}">Login</a> before `+(id?"Reply":"new comment")+`.....
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>`   
+            parent_div.insertAdjacentHTML('afterend',s);
+    }
+    else{
+      s = `<div id="newForm">
+            <fieldset>
+                <div class="row">
+                    <div class="col-sm-3 col-lg-1 hidden-xs">
+                      <img class="img-responsive" width = 50 height = 50 src="{{user.profilePic}}" alt="">
+                      <a href = {% url 'user_profile' user %}>{{user}}</a>
+                    </div>
+                    <div class="form-group col-xs-12 col-sm-9 col-lg-11">
+                        <textarea class="form-control" id="reply_message" placeholder="Your message" required></textarea>
+                    </div>
+                </div>
+                <input type="hidden" name="parent_id" id="reply_id" required>\  
+                <button id = "close-btn" type="button" class="btb btn-info pull-right" style="margin-left:10px;">Cancel</button>
+                <button id = "reply_btn" type="button" class="btb btn-success pull-right">Submit</button>
+            </fieldset>
+        </div>`
+        parent_div.insertAdjacentHTML('afterend',s);
+        document.getElementById("reply_id").value = id;
+      }
+    
+  }
+
+  function Editfunction(id){
+    if(document.contains(document.getElementById('newForm'))){
+        document.getElementById('newForm').remove();
+    }
+    node_id = 1;
+    var content = document.getElementById("Edit_"+id).textContent;
+    console.log(document.getElementById("Edit_"+id))
+    parent_div = document.getElementById("button_"+id).parentElement.parentElement.parentElement;
+    
+      var s = `<div id="newForm">
+            <fieldset>
+                <div class = "row">
+                </div>
+                <div class="row">
+                    <div class="form-group col-xs-12 col-sm-9 col-lg-11">
+                        <textarea class="form-control" id="reply_message" placeholder="Your message" required>`+content+`</textarea>
+                    </div>
+                </div>
+                <input type="hidden" name="parent_id" id="reply_id" required>\  
+                <button id = "close-btn" type="button" class="btb btn-info pull-right" style="margin-left:10px;">Cancel</button>
+                <button id = "reply_btn" type="button" class="btb btn-success pull-right">Submit</button>
+            </fieldset>
+        </div>`
+      parent_div.insertAdjacentHTML('afterend',s);
+      document.getElementById("reply_id").value = id;
+    
+  }
+
+
+    $(document).ready(function(){
+        
+        $(document).on("click","#close-btn",function(){
+          console.log("ff");
+          $('#newForm').remove();
+        });
+             
+        // like post
+        $(document).on("click","#like-post",function(){
+          var user = "{{user}}"; 
+          if(user == 'AnonymousUser'){
+             s = `<div class="alert alert-warning alert-dismissible fade show" role="alert">
+              <strong>Hey Reader!</strong> <a href="{% url 'show_login' %}">Login</a> before Liking Post...
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>`   
+            $('#post-notify').html(s);
+          }
+          else{
+            $.ajax({
+                  url:'{% url 'like_post' %}',
+                  type:'POST',
+                  data:{user_id:{{user.id}},post_id : {{post.id}}},
+                })
+                .done(function(response){
+                    if(response=="True"){
+                        console.log("Post Liked")
+                        location.reload()
+                    }
+                    else if(response == 'already'){
+                    s = `<div class="alert alert-warning alert-dismissible fade show" role="alert">
+                      <strong>Hey!</strong> You cann't like twice...
+                      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>`   
+                    $('#post-notify').html(s);
+                  }
+                    else if(response=='same user'){
+                        s = `<div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <strong>Hey!</strong> You cann't like on your post..
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>`   
+                      $('#post-notify').html(s);
+                    }
+                    else{
+                        console.log(response)
+                    }
+                    
+                })
+                .fail(function(){
+                    console.log("Error in post like")
+                })  
+            }
+          });
+
+        // Dislike post
+        $(document).on("click","#dislike-post",function(){
+          var user = "{{user}}"; 
+          if(user == 'AnonymousUser'){
+             s = `<div class="alert alert-warning alert-dismissible fade show" role="alert">
+              <strong>Hey Reader!</strong> <a href="{% url 'show_login' %}">Login</a> before Disliking Post...
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>`   
+            $('#post-notify').html(s);
+          }
+          else{
+            $.ajax({
+                    url:'{% url 'dislike_post' %}',
+                    type:'POST',
+                    data:{user_id:{{user.id}},post_id : {{post.id}}},
+                })
+                .done(function(response){
+                  if(response=="True"){
+                      console.log("Post Disliked")
+                      location.reload()
+                  }
+                  else if(response == 'already'){
+                    s = `<div class="alert alert-warning alert-dismissible fade show" role="alert">
+                      <strong>Hey!</strong> You cann't dislike twice...
+                      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>`   
+                    $('#post-notify').html(s);
+                  }
+                  else if(response=='same user'){
+                      s = `<div class="alert alert-warning alert-dismissible fade show" role="alert">
+                      <strong>Hey!</strong> You cann't dislike on your post..
+                      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>`   
+                    $('#post-notify').html(s);
+                  }
+                  else{
+                      console.log(response)
+                  }
+                  
+              })
+              .fail(function(){
+                  console.log("Error in post dislike")
+              })
+            }
+        });
+
+        // like comment
+        $(document).on("click","#like-comment",function(){
+          var cmnt_id = $(this).parents('ul').children("p:eq(0)").text();
+          console.log(cmnt_id);
+          var user = "{{user}}"; 
+          if(user == 'AnonymousUser'){
+             s = `<div class="alert alert-warning alert-dismissible fade show" role="alert">
+              <strong>Hey Reader!</strong> <a href="{% url 'show_login' %}">Login</a> before liking comment...
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>`   
+            $('#cmnt_notify_'+cmnt_id).html(s);
+          }
+          else{
+          $.ajax({
+                url:'{% url 'like_comment' %}',
+                type:'POST',
+                data:{user_id:{{user.id}},post_id : {{post.id}},cmnt_id:cmnt_id},
+              })
+              .done(function(response){
+                  if(response=="True"){
+                      console.log("Comment Liked")
+                      location.reload()
+                  }
+                  else if(response == 'already'){
+                    s = `<div class="alert alert-warning alert-dismissible fade show" role="alert">
+                      <strong>Hey!</strong> You cann't like twice...
+                      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>`   
+                    $('#cmnt_notify_'+cmnt_id).html(s);
+                  }
+                  else if(response=='same user'){
+                      s = `<div class="alert alert-warning alert-dismissible fade show" role="alert">
+                      <strong>Hey!</strong> You cann't make like on your comment
+                      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>`   
+                    $('#cmnt_notify_'+cmnt_id).html(s);
+                  }
+                  else{
+                    console.log(response)
+                  }
+                  
+              })
+              .fail(function(){
+                  console.log("Error in comment like")
+              })
+            }
+          });
+
+        // Dislike comment
+        $(document).on("click","#dislike-comment",function(){
+          var user = "{{user}}"; 
+          var cmnt_id = $(this).parents('ul').children("p:eq(0)").text();
+          if(user == 'AnonymousUser'){
+             s = `<div class="alert alert-warning alert-dismissible fade show" role="alert">
+              <strong>Hey Reader!</strong> <a href="{% url 'show_login' %}">Login</a> before Disliking comment...
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>`   
+            $('#cmnt_notify_'+cmnt_id).html(s);
+          }
+          else{
+ 
+            console.log(cmnt_id);
+            $.ajax({
+                    url:'{% url 'dislike_comment' %}',
+                    type:'POST',
+                    data:{user_id:{{user.id}},post_id : {{post.id}},cmnt_id:cmnt_id},
+                })
+                .done(function(response){
+                  if(response=="True"){
+                      console.log("Comment Disliked")
+                      location.reload()
+
+                  }
+                  else if(response == 'already'){
+                    s = `<div class="alert alert-warning alert-dismissible fade show" role="alert">
+                      <strong>Hey!</strong> You cann't dislike twice...
+                      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>`   
+                    $('#cmnt_notify_'+cmnt_id).html(s);
+                  }
+                  else if(response=='same user'){
+                      s = `<div class="alert alert-warning alert-dismissible fade show" role="alert">
+                      <strong>Hey!</strong> You cann't dislike on your comment
+                      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>`   
+                    $('#cmnt_notify_'+cmnt_id).html(s);
+                  }
+                  else{
+                      console.log(response)
+                  }
+                                })
+              .fail(function(){
+                  console.log(response)
+              })
+            }
+        });
+        
+
+        // add comment
+        $(document).on("click","#reply_btn",function(){
+            var parent_id = $("#reply_id").val();
+            var message=$("#reply_message").val()
+            $.ajax({
+                    url:'{% url 'add_new_comments' %}',
+                    type:'POST',
+                    data:{node_id:node_id,parent_id:parent_id,message:message,user_id:{{user.id}},post_id : {{post.id}}},
+                })
+                .done(function(response){
+
+                    if(response=="True"){
+                        console.log("Reply Sent")
+                    }
+                    else{
+                        console.log("Error in Sending Reply")
+                    }
+                    location.reload()
+                })
+                .fail(function(){
+                    console.log("Error in Sending Reply")
+                })
+          });
+
+    });
+</script>
+{% endblock custom_js %}
+
+
+
+
+
+
+
+

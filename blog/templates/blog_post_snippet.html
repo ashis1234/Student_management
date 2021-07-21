@@ -1,61 +1,106 @@
-<style type="text/css">
-	.card{
-		max-width: 700px;
-		width: 100%;
-	}
-	.card-body{
-		padding: 20px;
-	}
-</style>
-
-{% if blog_post %}
-<script type="text/javascript">
-	console.log(blog_post);
-</script>
-<div class="container">
-	<div class="row">
-		<!-- Blog Post -->
-		<div class="card m-auto">
-			<a href="{% url 'article' post.pk %}">
-				<img class="card-img-top" src="{{blog_post.image.url}}">
-			</a>
-			<div class="card-body mt-2 mb-2">
-				<a href="{% url 'article' post.pk %}">
-					<h2 class="card-title">{{blog_post.title}}</h2>
-				</a>
-				<strong>Category : </strong><a href="{% url 'category' post.category %}">
-					{{blog_post.category}}
-				</a>
-				<p class="card-text">{{blog_post.body|safe|truncatechars:180}}</p>
-				{% if blog_post.author == request.user %}
-					<a href="{% url 'update_post' post.pk %}" class="btn btn-primary">Update</a>
-					<a href="{% url 'delete_post' post.pk %}" class="btn btn-primary">Delete</a>
-				{% endif %}
-			</div>
-			<div class="card-footer text-muted">
-			  Updated on {{blog_post.post_date}} by 
-			  {% if blog_post.author.profile %}
-			  	
-			  {% else %}
-			  	
-			  	{{blog_post.author}}
-			  {% endif %}
+<div class="container mt-5">
+  <div class="row">
+    <div class="col-lg-8">
+		{% if blog_posts %}
+			{% for post in blog_posts %}
+				<div>
+					<a class = "post-title" href="{% url 'article' post.pk %}">
+						{{post.title|safe|truncatechars:100}}
+					</a>
+					<div class="post-text">{{post.body|safe|truncatechars:180}}...<a href = "{% url 'article' post.pk %}" class="read-more">read more</a></div>
+					<p class= "category-link">
+						{% for cat in post.category %}<a href="{% url 'category' cat %}"> {{cat}}</a> {% endfor %}
+					</p>
+					<p>Posted  <span class="publish-date">{{ post.whenpublished }}</span> by <a href="{% url 'user_profile' post.author %}" style="text-decoration:none;">{{post.author}}</a></p>
+					
+				</div>
+				<hr/>
+			{% endfor %}
+			{% if pagination_req %}
+				{% include 'pagination.html' with blog_posts=blog_posts %}
+			{% endif %}
+		{% else %}
+		<div class="container">
+			<div class="row">
+				<div class="card m-auto">
+					<div class="card-body mt-2 mb-2">
+						<h2 class="card-title">No results</h2>
+						<p class="card-text">There were no results matching the search: "{{query}}"</p>
+					</div>
+				</div>
 			</div>
 		</div>
-	</div>
+		{% endif %}
+  </div>
+	<div class="col-lg-4 ftco-animate bg-light pt-5 fadeInUp ftco-animated">
+      <div class="card mb-4">
+          <div class="card-header">
+            Featured Post
+            <a href="{% url 'featured_articles' %}">...view all</a>
+          </div>
+          <div class="card-body">
+              <div class="row">
+                    {% for post in featured_posts %}
+                      <a href="{% url 'article' post.id %}" style="text-decoration:none;">{{post.title|safe|truncatechars:50}}</a>
+                    {% endfor %}
+              </div>
+          </div>
+      </div>
+      <div class="card mb-4">
+          <div class="card-header">
+            Most Viewed Post
+            <a href="{% url 'most_viewed_articles' %}">...view all</a>
+          </div>
+          <div class="card-body">
+              <div class="row">
+                    {% for post in most_view_posts %}
+                      <a href="{% url 'article' post.id %}" style="text-decoration:none;">{{post.title|safe|truncatechars:50}}</a>
+                    {% endfor %}
+              </div>
+          </div>
+      </div>
+      <div class="card mb-4">
+          <div class="card-header">Most Like Post
+            <a href="{% url 'most_like_articles' %}">...view all</a>
+          </div>
+          <div class="card-body">
+              <div class="row">
+                    {% for post in most_like_posts %}
+                      <a href="{% url 'article' post.id %}" style="text-decoration:none;">{{post.title|safe|truncatechars:50}}</a>
+                    {% endfor %}
+              </div>
+          </div>
+      </div>
+      <div class="card mb-4">
+          <div class="card-header">
+            Latest Post
+            <a href="{% url 'latest_articles' %}">...view all</a>
+          </div>
+          <div class="card-body">
+              <div class="row">
+                    {% for post in latest_posts %}
+                      <a href="{% url 'article' post.id %}" style="text-decoration:none;">{{post.title|safe|truncatechars:50}}</a>
+                    {% endfor %}
+              </div>
+
+          </div>
+      </div>
+      <div class="card mb-4">
+          <div class="card-header">
+                Trending Topics              
+          </div>
+          <div class="card-body">
+              <div class="row">
+                <div class="col">
+                    <ul class="tagcloud">
+                      {% for cat in trending_topic1 %}
+                       <a class="tag-cloud-link badge bg-secondary text-decoration-none link-light" href="{% url 'category' cat %}">{{cat.name}}</a>
+                      {% endfor %}
+                    </ul>
+                </div>
+          </div>
+      </div>
+    </div>
+  </div>
 </div>
-
-{% else %}
-
-<div class="container">
-	<div class="row">
-		<div class="card m-auto">
-			<div class="card-body mt-2 mb-2">
-				<h2 class="card-title">No results</h2>
-				<p class="card-text">There were no results matching the search: "{{query}}"</p>
-			</div>
-		</div>
-	</div>
 </div>
-
-{% endif %}

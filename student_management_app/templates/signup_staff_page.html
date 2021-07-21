@@ -22,9 +22,8 @@
 <body class="hold-transition login-page">
 <div class="login-box">
   <div class="login-logo">
-    <a href="../../index2.html"><b>Student</b> Management System</a>
+    <a href="{% url 'home' %}"><b>Student</b> Management System</a>
   </div>
-  <!-- /.login-logo -->
   <div class="card">
     <div class="card-body login-card-body">
       <p class="login-box-msg">Sign Up Staff to Student Management System</p>
@@ -55,6 +54,15 @@
             </div>
           </div>
         </div>
+         <div class="input-group mb-3">
+          <select class="form-control" name="department">
+              {% for choice in departments %}
+              <option>
+                  {{choice.dept_name}}
+              </option>
+              {% endfor %}
+          </select>
+        </div>
           <div class="input-group mb-3">
           <input type="text" class="form-control" placeholder="Address" name="address">
           <div class="input-group-append">
@@ -83,6 +91,15 @@
           {% endif %}
         </div>
       </form>
+      <div class="row" style= "margin-top: 4px;">
+          <div class="col-5" style="margin-right: auto;">
+              <a href="{% url 'show_login' %}" class="btn btn-outline-info" >Sign in</a>
+          </div>
+          <div class="col-5">
+              <a href="{% url 'home' %}" class="btn btn-outline-info" >JGEC BLOG</a>
+          </div>
+        </div>
+      </div>
 
       <!-- /.social-auth-links -->
 

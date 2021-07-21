@@ -1,4 +1,4 @@
-{% extends 'hod_template/base_template.html' %}
+{% extends 'base_template.html' %}
 {% block page_title %}
 Student Apply for Leave
 {% endblock page_title %}
@@ -9,9 +9,16 @@ Student Apply for Leave
           <div class="row">
               <div class="col-md-12">
             <!-- general form elements -->
-            <div class="card card-primary">
+            <div class="card">
               <div class="card-header">
                 <h3 class="card-title">Student Apply for Leave</h3>
+                {% if pagination_req %}
+                <div class="card-tools">
+                  <ul class="pagination pagination-sm">
+                    {% include 'pagination.html' with blog_posts=leaves %}
+                  </ul>
+                </div>
+                {% endif %}
               </div>
               <!-- /.card-header -->
               <!-- form start -->
@@ -28,9 +35,9 @@ Student Apply for Leave
                         </tr>
                         {% for leave in leaves %}
                         <tr>
-                            <td>{{ leave.id }}</td>
-                            <td>{{ leave.student_id.admin.id }}</td>
-                            <td>{{ leave.student_id.admin.first_name }} {{ leave.student_id.admin.last_name }}</td>
+                           <td>{{ leave.id }}</td>
+                            <td>{{ leave.user.id }}</td>
+                            <td>{{ leave.user.first_name }} {{ leave.user.last_name }}</td>
                             <td>{{ leave.leave_date }}</td>
                             <td>{{ leave.leave_message }}</td>
                             <td>{{ leave.created_at }}</td>

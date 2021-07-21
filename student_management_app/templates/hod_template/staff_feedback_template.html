@@ -1,4 +1,4 @@
-{% extends 'hod_template/base_template.html' %}
+{% extends 'base_template.html' %}
 {% block page_title %}
 Staff Feedback
 {% endblock page_title %}
@@ -9,9 +9,16 @@ Staff Feedback
           <div class="row">
               <div class="col-md-12">
             <!-- general form elements -->
-            <div class="card card-primary">
+            <div class="card ">
               <div class="card-header">
-                <h3 class="card-title">Staff Feedback</h3>
+                <h3 class="card-title">Professor Feedback</h3>
+                {% if pagination_req %}
+                <div class="card-tools">
+                  <ul class="pagination pagination-sm">
+                    {% include 'pagination.html' with blog_posts=feedbacks %}
+                  </ul>
+                </div>
+                {% endif %}
               </div>
               <!-- /.card-header -->
               <!-- form start -->
@@ -19,8 +26,8 @@ Staff Feedback
                     <table class="table">
                         <tr>
                             <th>ID</th>
-                            <th>Staff ID</th>
-                            <th>Staff Name</th>
+                            <th>Professor ID</th>
+                            <th>Professor Name</th>
                             <th>Message</th>
                             <th>Sended On</th>
                             <th>Reply</th>
@@ -28,8 +35,9 @@ Staff Feedback
                         {% for feedback in feedbacks %}
                         <tr>
                             <td>{{ feedback.id }}</td>
-                            <td>{{ feedback.staff_id.admin.id }}</td>
-                            <td>{{ feedback.staff_id.admin.first_name }} {{ feedback.staff_id.admin.last_name }}</td>
+                            <td>{{ feedback.user_id }}</td>
+                            <td>{{ feedback.user.first_name }} 
+                             {{ feedback.user.last_name }}</td>
                             <td>{{ feedback.feedback }}</td>
                             <td>{{ feedback.created_at }}</td>
                             <td>
@@ -47,9 +55,6 @@ Staff Feedback
 
             </div>
             <!-- /.card -->
-
-
-
           </div>
           </div>
       </div>

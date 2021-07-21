@@ -1,0 +1,54 @@
+{% extends 'base_template.html' %}
+{% block page_title %}
+Manage Category
+{% endblock page_title %}
+{% block main_content %}
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Category Details</h3>
+                {% if pagination_req %}
+                <div class="card-tools">
+                  <ul class="pagination pagination-sm">
+                    {% include 'pagination.html' with blog_posts=categorys %}
+                  </ul>
+                </div>
+                {% endif %}
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body table-responsive p-0">
+                <table class="table table-hover text-nowrap">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Name</th>
+                      <th>Number of Posts</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  {% for cat in categorys %}
+                    <tr>
+                      <td>{{ cat.id }}</td>
+                      <td><a href="{% url 'category' cat.name %}">{{cat.name}}</td>
+                        <td>{{cat.count}}</td>
+                      <td><a href="{% url 'delete' 'category' cat.id %}" class="btn btn-danger">Delete</a></td>
+                    </tr>
+                  {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- /.content -->
+{% endblock main_content %}
+

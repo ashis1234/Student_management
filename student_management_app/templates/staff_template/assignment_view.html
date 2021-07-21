@@ -1,0 +1,120 @@
+{% extends 'base_template.html' %}
+{% block page_title %}
+Assignment Check
+{% endblock page_title %}
+{% block main_content %}
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+            <!-- general form elements -->
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">Assignment Check</h3>
+              </div>
+              <!-- /.card-header -->
+              <!-- form start -->
+                <div class="card-body">
+                   <div class="form-group">
+                    <label>Subject </label>
+                    <select class="form-control" name="subject" id="subject">
+                        {% for subject in subjects %}
+                          <option value="{{ subject.id }}">{{ subject.subject_name }}</option>
+                        {% endfor %}
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Assignments</label>
+                    <select class="form-control" name="assignment" id="assignment">
+                        {% for assignment in assignments %}
+                          <option value="{{ assignment.id }}">{{assignment.title }}</option>
+                        {% endfor %}
+                    </select>
+                  </div>
+                   <div class="form-group">
+                      {% if messages %}
+                        {% for message in messages %}
+                        {% if message.tags == 'error' %}
+                        <div class="alert alert-danger" style="margin-top:10px">{{ message }}</div>
+                        {% endif %}
+                        {% if message.tags == 'success' %}
+                        <div class="alert alert-success" style="margin-top:10px">{{ message }}</div>
+                        {% endif %}
+                        {% endfor %}
+                      {% endif %}
+                    </div>
+
+                </div>
+                <!-- /.card-body -->
+
+                <div class="card-footer">
+                  <button type="button" class="btn btn-primary btn-block" id="fetch_student_assignment">Fetch Students Assignment</button>
+                </div>
+            </div>
+            <!-- /.card -->
+          </div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Assignment Details</h3>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover text-nowrap">
+                            <thead>
+                                <tr>
+                                  <th>Student ID</th>
+                                  <th>Student Name</th>
+                                  <th>Submited At </th>
+                                  <th>View Assignment</th>
+                                  <th>Download Assignment</th>
+                                </tr>
+                            </thead>
+                            <tbody id='add_assignment'>
+                                
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>
+    </section>
+    <!-- /.content -->
+{% endblock main_content %}
+{% block custom_js %}
+<script>
+    $(document).ready(function(){
+        $("#fetch_student_assignment").click(function(){
+            var subject=$("#subject").val()
+            var assignment=$("#assignment").val()
+
+            $.ajax({
+                url:'{% url 'get_students_assignment' %}',
+                type:'POST',
+                data:{subject:subject,assignment:assignment},
+            })
+            .done(function(response){
+                var json_data=JSON.parse(response);
+                console.log(json_data);
+                var div_data = "";
+                for(key in json_data){
+                    div_data += `<tr>
+                      <td>`+json_data[key]['id']+`</td>
+                      <td>`+json_data[key]['name']+`</td>
+                      <td>`+json_data[key]['time']+`</td>
+                      <td><a href=`+json_data[key]['file']+` class="btn btn-outline-primary">View Assignment</a></td>
+                      <td><a href=`+json_data[key]['file']+` download class="btn btn-outline-success">Download Assignment</a></td> 
+                    </tr>`
+                }
+                $("#add_assignment").html(div_data);
+
+            })
+            .fail(function(){
+                alert("Error in Fetching Student assignment")
+            })
+        })
+    })
+</script>
+{% endblock custom_js %}
