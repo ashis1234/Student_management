@@ -36,11 +36,13 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'cloudinary_storage',
     'django.contrib.staticfiles',
     'student_management_app',
     'blog',
     'ckeditor',
     'mptt',
+     'cloudinary',
     # 'rest_framework.authtoken',
     # 'corsheaders',
     # 'rest_framework',
@@ -107,6 +109,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'dibzrb1bg',
+    'API_KEY': '112925192575491',
+    'API_SECRET': 'tiG4THKR5AjOgdWgSOisVnYYoAM',
+}
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
