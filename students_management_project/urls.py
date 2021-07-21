@@ -18,6 +18,7 @@ urlpatterns = [
     # path('api/gettoken/',TokenObtainPairView.as_view(),name="gettoken"),
     # path('api/resfresh_token/',TokenRefreshView.as_view(),name="refresh_token"),
     # path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    
     path('', include('blog.urls')),
     path('backend/',include('student_management_app.urls')),
     path('members/', include('django.contrib.auth.urls')),
