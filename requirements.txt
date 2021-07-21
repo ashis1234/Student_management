@@ -1,11 +1,12 @@
 asgiref==3.4.1
 Brotli==1.0.9
 boto3==1.11.0
-botocore==1.21.3
+botocore==3.0.2
 certifi==2021.5.30
 cffi==1.14.6
 chardet==3.0.4
 click==8.0.1
+cloudinary==1.17.0
 colorama==0.4.4
 dash==1.21.0
 dash-core-components==1.17.1
@@ -19,6 +20,7 @@ django-3-jet==1.0.8
 django-allauth==0.39.1
 django-audiotracks==0.2.4
 django-ckeditor==6.0.0
+django-cloudinary-storage==0.2.3
 django-comments-tree==0.2.0
 django-cors-headers==3.0.2
 django-countries==7.2.1
