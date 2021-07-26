@@ -144,8 +144,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR,'media')
 AUTH_USER_MODEL="student_management_app.CustomUser"
 AUTHENTICATION_BACKENDS=['student_management_app.EmailBackEnd.EmailBackEnd']
 ITEM_PER_PAGE = 1
-STATICFILES_STORAGE='whitenoise.storage.CompressedManifestStaticFilesStorage'
-import dj_database_url
-prod_db=dj_database_url.config(conn_max_age=500)
-DATABASES['default'].update(prod_db)
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR,'static'),
+    )
+# STATICFILES_STORAGE='whitenoise.storage.CompressedManifestStaticFilesStorage'
+# import dj_database_url
+# prod_db=dj_database_url.config(conn_max_age=500)
+# DATABASES['default'].update(prod_db)
 
