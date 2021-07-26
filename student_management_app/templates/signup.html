@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Student Management System | Staff Signup</title>
+  <title>Student Management System | {{name}} Signup</title>
   <!-- Tell the browser to be responsive to screen width -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -19,27 +19,27 @@
   <!-- Google Font: Source Sans Pro -->
   <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
 </head>
-<body class="hold-transition login-page">
+<body  style="background-color: url(https://images.pexels.com/photos/207691/pexels-photo-207691.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500);" class="hold-transition login-page">
 <div class="login-box">
   <div class="login-logo">
     <a href="{% url 'home' %}"><b>Student</b> Management System</a>
   </div>
   <div class="card">
     <div class="card-body login-card-body">
-      <p class="login-box-msg">Sign Up HOD to Student Management System</p>
+      <p class="login-box-msg">Sign Up {{name}} to Student Management System</p>
 
-      <form action="{% url 'do_hod_signup' %}" method="post" id="demo-form">
+      <form action="{% url action_path %}" method="post" id="demo-form">
       {% csrf_token %}
-        <div class="input-group mb-3">
-          <input type="email" class="form-control" placeholder="Email" name="email">
+        <div class="input-group mb-3" id='email'>
+          <input id ="id_email" type="email" class="form-control" placeholder="Email" name="email">
           <div class="input-group-append">
             <div class="input-group-text">
               <span class="fas fa-envelope"></span>
             </div>
           </div>
         </div>
-              <div class="input-group mb-3">
-          <input type="text" class="form-control" placeholder="Username" name="username">
+        <div class="input-group mb-3" id='username'>
+          <input id ="id_username" type="text" class="form-control" placeholder="Username" name="username">
           <div class="input-group-append">
             <div class="input-group-text">
               <span class="fas fa-envelope"></span>
@@ -54,6 +54,7 @@
             </div>
           </div>
         </div>
+        {% if departments %}
          <div class="input-group mb-3">
           <select class="form-control" name="department">
               {% for choice in departments %}
@@ -63,7 +64,19 @@
               {% endfor %}
           </select>
         </div>
-          <div class="input-group mb-3">
+        {% endif %}
+        {% if session_years %}
+        <div class="input-group mb-3">
+          <select class="form-control" name="session_year" value>
+              {% for choice in session_years %}
+              <option value="{{choice.id}}">
+                  {{choice.session_start_year}} - {{choice.session_end_year}}
+              </option>
+              {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+        <div class="input-group mb-3">
           <input type="text" class="form-control" placeholder="Address" name="address">
           <div class="input-group-append">
             <div class="input-group-text">
@@ -75,7 +88,7 @@
         <div class="row">
           <!-- /.col -->
           <div class="col-12">
-            <button type="submit" class="btn btn-primary btn-block" >Signup Staff</button>
+            <button type="submit" class="btn btn-primary btn-block" >Signup {{name}}</button>
           </div><!-- /.col -->
 
         </div>
@@ -116,6 +129,68 @@
 <!-- AdminLTE App -->
 <script src="{% static "dist/js/adminlte.min.js" %}"></script>
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<script>
+    $(document).ready(function(){
+        $("#id_email").keyup(function(){
+            var email=$(this).val();
 
+           if(email!=""){
+                $.ajax({
+                    url:'{% url 'check_email_exist' %}',
+                    type:'POST',
+                    data:{email:email}
+                })
+                .done(function(response){
+                    console.log(response);
+                    if(response=="True"){
+                        $(".email_error").remove();
+                        $("<span class='email_error' style='padding: 5px;color: red;font-weight: bold;'>Email Not Available</span>").insertAfter("#email");
+                    }
+                    else{
+                        $(".email_error").remove();
+                        $("<span class='email_error' style='padding: 5px;color: green;font-weight: bold;'>Email Available</span>").insertAfter("#email");
+                    }
+                })
+                .fail(function(){
+                    console.log("failed");
+                })
+            }
+            else{
+              $(".email_error").remove();
+            }
+
+        });
+
+        $("#id_username").keyup(function(){
+            var username=$(this).val();
+            if(username!=""){
+                $.ajax({
+                    url:'{% url 'check_username_exist' %}',
+                    type:'POST',
+                    data:{username:username}
+                })
+                .done(function(response){
+                    console.log(response);
+                    if(response=="True"){
+                        $(".username_error").remove();
+                        $("<span class='username_error' style='padding: 5px;color: red;font-weight: bold;'>Username Not Available</span>").insertAfter("#username");
+                    }
+                    else{
+                        $(".username_error").remove();
+                        $("<span class='username_error' style='padding: 5px;color: green;font-weight: bold;'>Username Available</span>").insertAfter("#username");
+                    }
+                })
+                .fail(function(){
+                    console.log("failed");
+                })
+            }
+            else{
+                $(".username_error").remove();
+            }
+
+        });
+
+    });
+</script>
 </body>
 </html>

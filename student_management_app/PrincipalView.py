@@ -300,7 +300,6 @@ def add_session_save(request):
 # By default, django check for csrf token with each POST request, it verifies csrf token before rendering the view
 @csrf_exempt
 def check_email_exist(request):
-    check_valid_user_access_the_page(request)
     email=request.POST.get("email")
     user_obj=CustomUser.objects.filter(email=email).exists()
     if user_obj:
@@ -310,8 +309,8 @@ def check_email_exist(request):
 
 @csrf_exempt
 def check_username_exist(request):
-    check_valid_user_access_the_page(request)
     username=request.POST.get("username")
+    print(username)
     user_obj=CustomUser.objects.filter(username=username).exists()
     if user_obj:
         return HttpResponse(True)

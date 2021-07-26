@@ -147,30 +147,47 @@ def signup_admin(request):
     if not request.user.is_anonymous:
         raise Http404('method not allowed')
     department = Department.objects.all()
-    return render(request,"signup_hod_page.html",{'departments':department})
+    return render(request,"signup.html",{'name':'Hod','departments':department,'action_path':'do_hod_signup'})
 
 def signup_principal(request):
     if not request.user.is_anonymous:
         raise Http404('method not allowed')
-    return render(request,"signup_principal_page.html")
-
+    return render(request,"signup.html",{'name':'Principal','action_path':'do_principal_signup'})
 
 def signup_student(request):
     if not request.user.is_anonymous:
         raise Http404('method not allowed')
     department = Department.objects.all()
     session_year = SessionYearModel.objects.all()
-    return render(request,"signup_student_page.html",{'departments':department,'session_years':session_year})
+    return render(request,"signup.html",{'name':'Student','departments':department,'session_years':session_year,'action_path':'do_signup_student'})
 
 def signup_staff(request):
     if not request.user.is_anonymous:
         raise Http404('method not allowed')
     department = Department.objects.all()
-    return render(request,"signup_staff_page.html",{'departments':department})
+
+    return render(request,"signup.html",{'name':'Staff','departments':department,'action_path':'do_staff_signup'})
+
+
+def check_email_username(request):
+    username=request.POST.get("username")
+    email=request.POST.get("email")
+    user_obj=CustomUser.objects.filter(username=username).exists()
+    if user_obj:
+        messages.error(request,'Username already exists')
+        return True
+    user_obj=CustomUser.objects.filter(email=email).exists()
+    if user_obj:
+        messages.error(request,'Email already exists')
+        return True
+    return False
 
 def do_principal_signup(request):
     if request.method != 'POST':
         raise Http404('method not allowed')
+    if check_email_username(request):
+        return HttpResponseRedirect(reverse('show_login'))
+    
     username=request.POST.get("username")
     email=request.POST.get("email")
     password=request.POST.get("password")
@@ -186,6 +203,9 @@ def do_principal_signup(request):
 def do_hod_signup(request):
     if request.method != 'POST':
         raise Http404('method not allowed')
+    if check_email_username(request):
+        return HttpResponseRedirect(reverse('show_login'))
+    
     username=request.POST.get("username")
     email=request.POST.get("email")
     password=request.POST.get("password")
@@ -203,6 +223,9 @@ def do_hod_signup(request):
 def do_staff_signup(request):
     if request.method != 'POST':
         raise Http404('method not allowed')
+    if check_email_username(request):
+        return HttpResponseRedirect(reverse('show_login'))
+    
     username=request.POST.get("username")
     email=request.POST.get("email")
     password=request.POST.get("password")
@@ -223,6 +246,9 @@ def do_staff_signup(request):
 def do_signup_student(request):
     if request.method != 'POST':
         raise Http404('method not allowed')
+    if check_email_username(request):
+        return HttpResponseRedirect(reverse('show_login'))
+    
     username=request.POST.get("username")
     email=request.POST.get("email")
     password=request.POST.get("password")
@@ -323,8 +349,9 @@ def Delete(request,type,id):
                         staff = AdminHOD.objects.get(admin=user)
                     else:
                         staff = Staffs.objects.get(admin=user)
-                    staff.delete()
+                    
                     user.delete()
+                    staff.delete()
                     messages.success(request,type.capitalize() + ' Deleted Successfully')
                 elif type == 'department':
                     Department.objects.filter(id=id).delete()
