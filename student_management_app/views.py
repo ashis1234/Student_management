@@ -7,7 +7,7 @@ import requests
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.core.files.storage import FileSystemStorage
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect,Http404
 from django.shortcuts import render
 from django.urls import reverse
 
@@ -60,16 +60,14 @@ from rest_framework import permissions
 
 
 
-def showDemoPage(request):
-    return render(request,"demo.html")
-
 def ShowLoginPage(request):
-    print(request.session.get('login-from'))
+    if not request.user.is_anonymous: 
+        raise Http404("method not allowed")
     return render(request,"login_page.html")
 
 def doLogin(request):
     if request.method!="POST":
-        return HttpResponse("<h2>Method Not Allowed</h2>")
+        raise Http404("method not allowed")
     else:
         LoginFrom = request.session.get('login-from')
         subpath = request.session.get('subpath')
@@ -95,8 +93,8 @@ def doLogin(request):
         user=EmailBackEnd.authenticate(request,username=request.POST.get("username"),password=request.POST.get("password"))
         if user!=None:
             login(request,user)
+            request.session['user_type'] = user.user_type
             if subpath:
-                print("ff")
                 return HttpResponseRedirect(reverse(LoginFrom,kwargs={subpath:ItemId}))
             if LoginFrom:
                 return HttpResponseRedirect(reverse(LoginFrom))
@@ -123,6 +121,8 @@ def GetUserDetails(request):
 
 def logout_user(request):
     logout(request)
+    if request.session.get('user_type'):
+        del request.session['user_type']
     LoginFrom = request.session.get('login-from')
     subpath = request.session.get('subpath')
     ItemId = request.session.get('item-id')
@@ -144,23 +144,33 @@ def Testurl(request):
     return HttpResponse("Ok")
 
 def signup_admin(request):
+    if not request.user.is_anonymous:
+        raise Http404('method not allowed')
     department = Department.objects.all()
     return render(request,"signup_hod_page.html",{'departments':department})
 
 def signup_principal(request):
+    if not request.user.is_anonymous:
+        raise Http404('method not allowed')
     return render(request,"signup_principal_page.html")
 
 
 def signup_student(request):
+    if not request.user.is_anonymous:
+        raise Http404('method not allowed')
     department = Department.objects.all()
     session_year = SessionYearModel.objects.all()
     return render(request,"signup_student_page.html",{'departments':department,'session_years':session_year})
 
 def signup_staff(request):
+    if not request.user.is_anonymous:
+        raise Http404('method not allowed')
     department = Department.objects.all()
     return render(request,"signup_staff_page.html",{'departments':department})
 
 def do_principal_signup(request):
+    if request.method != 'POST':
+        raise Http404('method not allowed')
     username=request.POST.get("username")
     email=request.POST.get("email")
     password=request.POST.get("password")
@@ -174,6 +184,8 @@ def do_principal_signup(request):
         return HttpResponseRedirect(reverse("show_login"))
 
 def do_hod_signup(request):
+    if request.method != 'POST':
+        raise Http404('method not allowed')
     username=request.POST.get("username")
     email=request.POST.get("email")
     password=request.POST.get("password")
@@ -189,6 +201,8 @@ def do_hod_signup(request):
         return HttpResponseRedirect(reverse("show_login"))
 
 def do_staff_signup(request):
+    if request.method != 'POST':
+        raise Http404('method not allowed')
     username=request.POST.get("username")
     email=request.POST.get("email")
     password=request.POST.get("password")
@@ -207,6 +221,8 @@ def do_staff_signup(request):
         return HttpResponseRedirect(reverse("show_login"))
 
 def do_signup_student(request):
+    if request.method != 'POST':
+        raise Http404('method not allowed')
     username=request.POST.get("username")
     email=request.POST.get("email")
     password=request.POST.get("password")
@@ -230,12 +246,18 @@ def do_signup_student(request):
 
 
 def apply_leave(request):
+    user_type = request.session.get('user_type',-1)
+    if user_type not in ['0','1','2']:
+        raise Http404('method not allowed')
     user_obj = CustomUser.objects.get(id=request.user.id)
     leave_data=LeaveReport.objects.filter(user=user_obj)
     return render(request,"leave.html",{"leave_data":leave_data})
 
 
 def apply_leave_save(request):
+    user_type = request.session.get('user_type',-1)
+    if user_type not in ['0','1','2']:
+        raise Http404('method not allowed')
     if request.method!="POST":
         return HttpResponseRedirect(reverse("apply_leave"))
     else:
@@ -254,11 +276,17 @@ def apply_leave_save(request):
 
 
 def feedback(request):
+    user_type = request.session.get('user_type',-1)
+    if user_type not in ['0','1','2']:
+        raise Http404('method not allowed')
     user_obj = CustomUser.objects.get(id=request.user.id)
     feedback_data=FeedBack.objects.filter(user=user_obj)
     return render(request,"feedback.html",{"feedback_data":feedback_data})
 
 def feedback_save(request):
+    user_type = request.session.get('user_type',-1)
+    if user_type not in ['0','1','2']:
+        raise Http404('method not allowed')
     if request.method!="POST":
         return HttpResponseRedirect(reverse("feedback_save"))
     else:
@@ -275,6 +303,8 @@ def feedback_save(request):
 
 
 def Delete(request,type,id):
+    if request.user.is_anonymous:
+        raise Http404('method not allowed')
     if request.method!="POST":
         return render(request,'delete_post.html',{'name':type,'id' : id})
     else:

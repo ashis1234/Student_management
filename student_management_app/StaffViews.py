@@ -11,15 +11,27 @@ from django.views.generic import DeleteView
 from .models import *
 from django.core.files.storage import FileSystemStorage
 
+
+def check_valid_user_access_the_page(request):
+    user_type = request.session.get('user_type',-1)
+    if user_type != '2' and user_type != '1':
+        raise Http404('method not allowed')
+    
+
+
+
 def staff_home(request):
     #For Fetch All Student Under Staff
 
     if request.user.is_anonymous:
         raise Http404("Anonymous User Hasn't Authorize To Access Teacher Page")
-    elif request.user.user_type == 1:
+    elif request.user.user_type == '1':
         raise Http404("AdminHod Hasn't Authorize To Access Teacher Page")
-    elif request.user.user_type == 3:
+    elif request.user.user_type == '3':
         raise Http404("Students Hasn't Authorize To Access Teacher Page")
+    elif request.user.user_type == '0':
+        raise Http404("Principal Hasn't Authorize To Access teacher Page")
+    
     else:
         subjects=Subjects.objects.filter(staff_id=request.user.id)
         
@@ -40,11 +52,13 @@ def staff_home(request):
 
 
 def staff_profile(request):
+    check_valid_user_access_the_page(request)
     user=CustomUser.objects.get(id=request.user.id)
     staff=Staffs.objects.get(admin=user)
     return render(request,"staff_template/staff_profile.html",{"user":user,"staff":staff})
 
 def staff_profile_save(request):
+    check_valid_user_access_the_page(request)
     if request.method!="POST":
         return HttpResponseRedirect(reverse("staff_profile"))
     else:
@@ -76,6 +90,7 @@ def staff_profile_save(request):
 
 @csrf_exempt
 def get_students(request):
+    check_valid_user_access_the_page(request)
     subject_id=request.POST.get("subject")
     session_year=request.POST.get("session_year")
 
@@ -97,12 +112,14 @@ def get_students(request):
 
 
 def staff_take_attendance(request):
+    check_valid_user_access_the_page(request)
     subjects=Subjects.objects.filter(staff_id=request.user.id)
     session_years=SessionYearModel.objects.all()
     return render(request,"staff_template/staff_take_attendance.html",{"subjects":subjects,"session_years":session_years})
 
 @csrf_exempt
 def save_attendance_data(request):
+    check_valid_user_access_the_page(request)
     student_ids=request.POST.get("student_ids")
     subject_id=request.POST.get("subject_id")
     attendance_date=request.POST.get("attendance_date")
@@ -127,12 +144,14 @@ def save_attendance_data(request):
         return HttpResponse("ERR")
 
 def staff_update_attendance(request):
+    check_valid_user_access_the_page(request)
     subjects=Subjects.objects.filter(staff_id=request.user.id)
     session_year_id=SessionYearModel.objects.all()
     return render(request,"staff_template/staff_update_attendance.html",{"subjects":subjects,"session_year_id":session_year_id})
 
 @csrf_exempt
 def get_attendance_dates(request):
+    check_valid_user_access_the_page(request)
     subject=request.POST.get("subject")
     session_year_id=request.POST.get("session_year_id")
     subject_obj=Subjects.objects.get(id=subject)
@@ -147,6 +166,7 @@ def get_attendance_dates(request):
 
 @csrf_exempt
 def get_attendance_student(request):
+    check_valid_user_access_the_page(request)
     attendance_date=request.POST.get("attendance_date")
     attendance=Attendance.objects.get(id=attendance_date)
 
@@ -164,6 +184,7 @@ def get_attendance_student(request):
 
 @csrf_exempt
 def save_updateattendance_data(request):
+    check_valid_user_access_the_page(request)
     student_ids=request.POST.get("student_ids")
     attendance_date=request.POST.get("attendance_date")
     attendance=Attendance.objects.get(id=attendance_date)
@@ -184,6 +205,7 @@ def save_updateattendance_data(request):
 # ////////////////////////////////////////////////////////////Post//////////////////////////////////////////////////
 
 def Assignment_upload(request):
+    check_valid_user_access_the_page(request)
     if request.method != "POST":
         user_id = request.user.id
         subjects = Subjects.objects.filter(staff_id=user_id)
@@ -219,6 +241,7 @@ def Assignment_upload(request):
 
 
 def assignment_check(request):
+    check_valid_user_access_the_page(request)
     user = CustomUser.objects.get(id=request.user.id)
     assignment = []
     subjects = Subjects.objects.filter(staff_id=user)
@@ -229,6 +252,7 @@ def assignment_check(request):
 
 @csrf_exempt
 def get_students_assignment(request):
+    check_valid_user_access_the_page(request)
     subject_id = request.POST.get('subject')
     assignment_id = request.POST.get('assignment')
     assignment_obj = Assignment.objects.get(id=assignment_id)

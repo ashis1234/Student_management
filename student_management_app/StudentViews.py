@@ -11,13 +11,22 @@ from django.contrib.auth import get_user_model
 from .models import *
 from django.core.files.storage import FileSystemStorage
 
+def check_valid_user_access_the_page(request):
+    user_type = request.session.get('user_type',-1)
+    if user_type != '3':
+        raise Http404('method not allowed')
+    
+
 def student_home(request):
     if request.user.is_anonymous:
         raise Http404("Anonymous User Hasn't Authorize To Access Students Page")
-    elif request.user.user_type == 1:
+    elif request.user.user_type == '1':
         raise Http404("AdminHod Hasn't Authorize To Access Students Page")
-    elif request.user.user_type == 2:
+    elif request.user.user_type == '2':
         raise Http404("Staffs Hasn't Authorize To Access Students Page")
+    elif request.user.user_type == '0':
+        raise Http404("Principal Hasn't Authorize To Access student Page")
+    
     else:
         student_obj=Students.objects.get(admin=request.user.id)
         attendance_total=AttendanceReport.objects.filter(student_id=student_obj).count()
@@ -47,11 +56,13 @@ def student_home(request):
 
 
 def student_profile(request):
+    check_valid_user_access_the_page(request)
     user=CustomUser.objects.get(id=request.user.id)
     student=Students.objects.get(admin=user)
     return render(request,"student_template/student_profile.html",{"user":user,"student":student})
 
 def student_profile_save(request):
+    check_valid_user_access_the_page(request)
     if request.method!="POST":
         return HttpResponseRedirect(reverse("student_home"))
     else:
@@ -75,18 +86,21 @@ def student_profile_save(request):
 
 
 def student_view_result(request):
+    check_valid_user_access_the_page(request)
     student=Students.objects.get(admin=request.user.id)
     studentresult=StudentResult.objects.filter(student_id=student.id)
     return render(request,"student_template/student_result.html",{"studentresult":studentresult})
 
 
 def student_view_attendance(request):
+    check_valid_user_access_the_page(request)
     student=Students.objects.get(admin=request.user.id)
     dept=student.dept_id
     subjects=Subjects.objects.filter(dept_id=dept)
     return render(request,"student_template/student_view_attendance.html",{"subjects":subjects})
 
 def student_view_attendance_post(request):
+    check_valid_user_access_the_page(request)
     subject_id=request.POST.get("subject")
     start_date=request.POST.get("start_date")
     end_date=request.POST.get("end_date")
@@ -102,6 +116,7 @@ def student_view_attendance_post(request):
     return render(request,"student_template/student_attendance_data.html",{"attendance_reports":attendance_reports})
 
 def assignment_view(request):
+    check_valid_user_access_the_page(request)
     user_obj = CustomUser(id=request.user.id)
     session_year = user_obj.student.session_year_id
     subjects = Subjects.objects.filter(session_year=session_year)
@@ -117,10 +132,12 @@ def assignment_view(request):
    
 
 def assignment_submit(request,id):
+    check_valid_user_access_the_page(request)
     request.session['assignment_id'] = id
     return render(request,'student_template/assignment_submit.html')
 
 def assignment_save(request):
+    check_valid_user_access_the_page(request)
     if request.method != 'POST':
         return Http404(request,'method Not Allowed')
     else:

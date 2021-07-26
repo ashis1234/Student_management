@@ -17,9 +17,14 @@ from blog.models import *
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from students_management_project.settings import ITEM_PER_PAGE
 
+def check_valid_user_access_the_page(request):
+    user_type = request.session.get('user_type',-1)
+    if user_type != '0':
+        raise Http404('method not allowed')
+    
+
 
 def Pagination_handle(request,obj):
-    print("FF")
     pagination_req = len(obj) > ITEM_PER_PAGE
     page = request.GET.get('page', 1)
     obj_paginator = Paginator(obj, ITEM_PER_PAGE)
@@ -104,9 +109,11 @@ def principal_home(request):
 
 
 def add_department(request):
+    check_valid_user_access_the_page(request)
     return render(request,"hod_template/add_course_template.html")
 
 def add_department_save(request):
+    check_valid_user_access_the_page(request)
     if request.method!="POST":
         return HttpResponse("Method Not Allowed")
     else:
@@ -122,6 +129,7 @@ def add_department_save(request):
             return HttpResponseRedirect(reverse("add_department"))
 
 def manage_department(request):
+    check_valid_user_access_the_page(request)
     department=Department.objects.all()
     departments = []
     for dept in department:
@@ -134,10 +142,12 @@ def manage_department(request):
     return render(request,"hod_template/manage_department_template.html",context)
 
 def edit_department(request,dept_id):
+    check_valid_user_access_the_page(request)
     department=Department.objects.get(id=dept_id)
     return render(request,"hod_template/edit_department_template.html",{"department":department,"id":dept_id})
 
 def edit_department_save(request):
+    check_valid_user_access_the_page(request)
     if request.method!="POST":
         return HttpResponse("<h2>Method Not Allowed</h2>")
     else:
@@ -156,6 +166,7 @@ def edit_department_save(request):
 
 
 def manage_staff(request):
+    check_valid_user_access_the_page(request)
     staffs = CustomUser.objects.filter(user_type=1) | CustomUser.objects.filter(user_type=2)
     context = {}
     pagination_req,staffs = Pagination_handle(request,staffs)
@@ -164,6 +175,7 @@ def manage_staff(request):
     return render(request,"hod_template/manage_staff_template.html",context)
 
 def edit_staff(request,staff_id):
+    check_valid_user_access_the_page(request)
     heading_text = "Staff"
     if request.user.id == staff_id:
         heading_text = "Profile"
@@ -185,6 +197,7 @@ def edit_staff(request,staff_id):
     return render(request,"edit_profile.html",{'action_path':'edit_staff_save','id' : staff_id,"form":form,'name' : heading_text})
 
 def edit_staff_save(request):
+    check_valid_user_access_the_page(request)
     if request.method!="POST":
         return HttpResponse("<h2>Method Not Allowed</h2>")
     else:
@@ -249,6 +262,7 @@ def edit_staff_save(request):
             return render(request,"edit_profile.html",{'action_path':'edit_staff_save','id' : staff_id,"form":form,'name' : heading_text})
 
 def manage_session(request):
+    check_valid_user_access_the_page(request)
     sessions = SessionYearModel.objects.all()
     context = {}
     pagination_req,sessions = Pagination_handle(request,sessions)
@@ -257,6 +271,7 @@ def manage_session(request):
     return render(request,"hod_template/manage_session_template.html",context)
 
 def add_session_save(request):
+    check_valid_user_access_the_page(request)
     if request.method!="POST":
         return HttpResponseRedirect(reverse("manage_session"))
     elif 'session_id' in request.POST:
@@ -285,6 +300,7 @@ def add_session_save(request):
 # By default, django check for csrf token with each POST request, it verifies csrf token before rendering the view
 @csrf_exempt
 def check_email_exist(request):
+    check_valid_user_access_the_page(request)
     email=request.POST.get("email")
     user_obj=CustomUser.objects.filter(email=email).exists()
     if user_obj:
@@ -294,6 +310,7 @@ def check_email_exist(request):
 
 @csrf_exempt
 def check_username_exist(request):
+    check_valid_user_access_the_page(request)
     username=request.POST.get("username")
     user_obj=CustomUser.objects.filter(username=username).exists()
     if user_obj:
@@ -302,6 +319,7 @@ def check_username_exist(request):
         return HttpResponse(False)
 
 def staff_feedback_message(request):
+    check_valid_user_access_the_page(request)
     feedbacks = []
     for staff in Staffs.objects.all():
         user_obj = CustomUser.objects.get(id = staff.admin.id)
@@ -320,6 +338,7 @@ def staff_feedback_message(request):
 
 @csrf_exempt
 def staff_feedback_message_replied(request):
+    check_valid_user_access_the_page(request)
     feedback_id=request.POST.get("id")
     feedback_message=request.POST.get("message")
 
@@ -333,6 +352,7 @@ def staff_feedback_message_replied(request):
 
 
 def staff_leave_view(request):
+    check_valid_user_access_the_page(request)
     #LeaveReport   
     leaves = []
     for staff in Staffs.objects.all():
@@ -346,6 +366,7 @@ def staff_leave_view(request):
     return render(request,"hod_template/staff_leave_view.html",context)
 
 def staff_approve_leave(request,leave_id):
+    check_valid_user_access_the_page(request)
     #LeaveReport  
     leave=LeaveReport.objects.get(id=leave_id)
     leave.leave_status=1
@@ -353,6 +374,7 @@ def staff_approve_leave(request,leave_id):
     return HttpResponseRedirect(reverse("staff_leave_view"))
 
 def staff_disapprove_leave(request,leave_id):
+    check_valid_user_access_the_page(request)
     #LeaveReport  
     leave=LeaveReport.objects.get(id=leave_id)
     leave.leave_status=2
@@ -360,6 +382,7 @@ def staff_disapprove_leave(request,leave_id):
     return HttpResponseRedirect(reverse("staff_leave_view"))
 
 def edit_hod(request,hod_id):
+    check_valid_user_access_the_page(request)
     request.session['hod_id']=hod_id
     hod=Principal.objects.get(admin=hod_id)
     form=EditHODForm()
@@ -372,6 +395,7 @@ def edit_hod(request,hod_id):
 
 
 def edit_hod_save(request):
+    check_valid_user_access_the_page(request)
     if request.method!="POST":
         return HttpResponse("<h2>Method Not Allowed</h2>")
     else:

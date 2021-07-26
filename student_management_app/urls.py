@@ -18,7 +18,6 @@ urlpatterns = [
     path('do_staff_signup',views.do_staff_signup,name="do_staff_signup"),
     path('do_signup_student',views.do_signup_student,name="do_signup_student"),
     path('',views.ShowLoginPage,name="show_login"),
-    path('get_user_details', views.GetUserDetails),
     path('logout_user', views.logout_user,name="logout_user"),
     path('doLogin',views.doLogin,name="do_login"),
     path('admin_home',HodViews.Hod_home,name="admin_home"),

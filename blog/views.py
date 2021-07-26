@@ -4,7 +4,7 @@ from .models import *
 from django.contrib import messages
 from django.urls import reverse_lazy,reverse
 from .forms import PostForm,EditForm
-from django.http import HttpResponseRedirect,HttpResponse
+from django.http import HttpResponseRedirect,HttpResponse,Http404
 from student_management_app.models import *
 from operator import attrgetter
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
@@ -228,6 +228,9 @@ def Articledetails(request,pk,cmnt_id=None):
 
 
 def add_post(request):
+	user_type = request.session.get('user_type',-1)
+	if user_type == -1:
+		raise Http404('method not allowed')
 	form = PostForm()
 	if request.method != 'POST':
 		return render(request,'add_post.html',{'form' : form})
@@ -273,6 +276,9 @@ def add_post(request):
 			return HttpResponseRedirect(reverse("add_post"))
 
 def manage_category(request):
+	user_type = request.session.get('user_type',-1)
+	if user_type == -1 or user_type == '0':
+		raise Http404('method not allowed')
 	categorys=Category.objects.filter()
 	context = {}
 	context['pagination_req'] = len(categorys) > ITEM_PER_PAGE
@@ -289,16 +295,22 @@ def manage_category(request):
 
 
 def edit_post(request,post_id):
-    request.session['post_id']=post_id
-    post=Post.objects.get(id=post_id)
-    form=EditForm()
-    form.fields['title'].initial=post.title
-    form.fields['body'].initial=post.body
-    form.fields['category'].initial=post.category
-    form.fields['featured'].initial = post.featured
-    return render(request,"edit_post.html",{"form":form,"id":post_id})
+	user_type = request.session.get('user_type',-1)
+	if user_type == -1:
+		raise Http404('method not allowed')
+	request.session['post_id']=post_id
+	post=Post.objects.get(id=post_id)
+	form=EditForm()
+	form.fields['title'].initial=post.title
+	form.fields['body'].initial=post.body
+	form.fields['category'].initial=post.category
+	form.fields['featured'].initial = post.featured
+	return render(request,"edit_post.html",{"form":form,"id":post_id})
 
 def edit_post_save(request):
+	user_type = request.session.get('user_type',-1)
+	if user_type == -1:
+		raise Http404('method not allowed')
 	form = EditForm()
 	if request.method != "POST":
 		return HttpResponse("<h2>Method Not Allowed</h2>")
@@ -373,11 +385,14 @@ def edit_post_save(request):
 
 
 class DeletePost(DeleteView):
-    model = Post
-    template_name = 'delete_post.html'
-    success_url = reverse_lazy('manage_post')
+	model = Post
+	template_name = 'delete_post.html'
+	success_url = reverse_lazy('manage_post')
 
 def manage_post(request):
+	user_type = request.session.get('user_type',-1)
+	if user_type == -1:
+		raise Http404('method not allowed')
 	posts=Post.objects.filter(author=request.user.id)
 	context = {}
 	context['pagination_req'] = len(posts) > ITEM_PER_PAGE

@@ -16,6 +16,13 @@ from blog.models import *
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from students_management_project.settings import ITEM_PER_PAGE
 
+def check_valid_user_access_the_page(request):
+    user_type = request.session.get('user_type',-1)
+    if user_type != '1':
+        raise Http404('method not allowed')
+    
+
+
 def Pagination_handle(request,obj):
     pagination_req = len(obj) > ITEM_PER_PAGE
     page = request.GET.get('page', 1)
@@ -29,12 +36,15 @@ def Pagination_handle(request,obj):
     return pagination_req,obj
 
 def Hod_home(request):
+    print(request.user.user_type)
     if request.user.is_anonymous:
         raise Http404("Anonymous User Hasn't Authorize To Access Admin Page")
-    elif request.user.user_type == 3:
+    elif request.user.user_type == '3':
         raise Http404("Staff Hasn't Authorize To Access Admin Page")
-    elif request.user.user_type == 2:
+    elif request.user.user_type == '2':
         raise Http404("Students Hasn't Authorize To Access Admin Page")
+    elif request.user.user_type == '0':
+        raise Http404("Principal Hasn't Authorize To Access Admin Page")
     else:
         dept_id = request.user.hod.dept_id
         student_count1=Students.objects.filter(dept_id=dept_id).count()
@@ -136,12 +146,14 @@ def Hod_home(request):
 
 
 def add_subject(request):
+    check_valid_user_access_the_page(request)
     departments=Department.objects.all()
     session_year=SessionYearModel.objects.all()
     staffs=CustomUser.objects.filter(user_type=2) | CustomUser.objects.filter(user_type=1)
     return render(request,"hod_template/add_subject_template.html",{"staffs":staffs,"departments":departments,'session_years':session_year})
 
 def add_subject_save(request):
+    check_valid_user_access_the_page(request)
     if request.method!="POST":
         return HttpResponse("<h2>Method Not Allowed</h2>")
     else:
@@ -164,6 +176,7 @@ def add_subject_save(request):
 
 
 def manage_student(request):
+    check_valid_user_access_the_page(request)
     students=Students.objects.all()
     context = {}
     pagination_req,students = Pagination_handle(request,students)
@@ -174,6 +187,7 @@ def manage_student(request):
 
 
 def manage_subject(request):
+    check_valid_user_access_the_page(request)
     subjects=Subjects.objects.all()
     context = {}
     pagination_req,subjects = Pagination_handle(request,subjects)
@@ -185,6 +199,7 @@ def manage_subject(request):
 
 
 def edit_student(request,student_id):
+    check_valid_user_access_the_page(request)
     heading_text = "Student"
     if request.user.id == student_id:
         heading_text = "Profile"
@@ -202,6 +217,7 @@ def edit_student(request,student_id):
     return render(request,"edit_profile.html",{'action_path':'edit_student_save','id' : student_id,"form":form,"student":student,'name' : heading_text})
 
 def edit_student_save(request):
+    check_valid_user_access_the_page(request)
     if request.method!="POST":
         return HttpResponse("<h2>Method Not Allowed</h2>")
     else:
@@ -270,6 +286,7 @@ def edit_student_save(request):
 
 
 def edit_subject(request,subject_id):
+    check_valid_user_access_the_page(request)
     subject=Subjects.objects.get(id=subject_id)
     departments=Department.objects.all()
     staffs=CustomUser.objects.filter(user_type=2) | CustomUser.objects.filter(user_type=1)
@@ -277,6 +294,7 @@ def edit_subject(request,subject_id):
     return render(request,"hod_template/edit_subject_template.html",{"subject":subject,"staffs":staffs,"departments":departments,"id":subject_id,'session_years':session_years})
 
 def edit_subject_save(request):
+    check_valid_user_access_the_page(request)
     if request.method!="POST":
         return HttpResponse("<h2>Method Not Allowed</h2>")
     else:
@@ -309,6 +327,7 @@ def edit_subject_save(request):
 
 
 def student_feedback_message(request):
+    check_valid_user_access_the_page(request)
     feedbacks = []
     for student in Students.objects.all():
         user_obj = CustomUser.objects.get(id = student.admin.id)
@@ -322,6 +341,7 @@ def student_feedback_message(request):
 
 @csrf_exempt
 def student_feedback_message_replied(request):
+    check_valid_user_access_the_page(request)
     feedback_id=request.POST.get("id")
     feedback_message=request.POST.get("message")
 
@@ -335,6 +355,7 @@ def student_feedback_message_replied(request):
 
 
 def student_leave_view(request):
+    check_valid_user_access_the_page(request)
     # LeaveReportStudentl
     leaves = []
     for student in Students.objects.all():
@@ -348,6 +369,7 @@ def student_leave_view(request):
     return render(request,"hod_template/student_leave_view.html",context)
 
 def student_approve_leave(request,leave_id):
+    check_valid_user_access_the_page(request)
     # LeaveReportStudent
     leave=LeaveReport.objects.get(id=leave_id)
     leave.leave_status=1
@@ -355,6 +377,7 @@ def student_approve_leave(request,leave_id):
     return HttpResponseRedirect(reverse("student_leave_view"))
 
 def student_disapprove_leave(request,leave_id):
+    check_valid_user_access_the_page(request)
     # LeaveReportStudent
     leave=LeaveReport.objects.get(id=leave_id)
     leave.leave_status=2
@@ -363,12 +386,14 @@ def student_disapprove_leave(request,leave_id):
 
 
 def admin_view_attendance(request):
+    check_valid_user_access_the_page(request)
     subjects=Subjects.objects.all()
     session_year_id=SessionYearModel.objects.all()
     return render(request,"hod_template/admin_view_attendance.html",{"subjects":subjects,"session_year_id":session_year_id})
 
 @csrf_exempt
 def admin_get_attendance_dates(request):
+    check_valid_user_access_the_page(request)
     subject=request.POST.get("subject")
     session_year_id=request.POST.get("session_year_id")
     subject_obj=Subjects.objects.get(id=subject)
@@ -384,6 +409,7 @@ def admin_get_attendance_dates(request):
 
 @csrf_exempt
 def admin_get_attendance_student(request):
+    check_valid_user_access_the_page(request)
     attendance_date=request.POST.get("attendance_date")
     attendance=Attendance.objects.get(id=attendance_date)
 
