@@ -45,7 +45,7 @@ class Department(models.Model):
     updated_at=models.DateTimeField(auto_now_add=True)
     objects=models.Manager()
 
-class AdminHOD(models.Model):
+class HOD(models.Model):
     id=models.AutoField(primary_key=True)
     profile_pic = models.FileField()
     dept_id=models.OneToOneField(Department,on_delete=models.CASCADE,related_name='hod_dept')
@@ -174,7 +174,7 @@ def create_user_profile(sender,instance,created,**kwargs):
         if instance.user_type==0:
             Principal.objects.create(admin=instance,profile_pic="")
         elif instance.user_type==1:
-            AdminHOD.objects.create(admin=instance,profile_pic="",dept_id=Department.objects.all()[0])
+            HOD.objects.create(admin=instance,profile_pic="",dept_id=Department.objects.all()[0])
         elif instance.user_type==2:
             Staffs.objects.create(admin=instance,dept_id=Department.objects.all()[0],address="",profile_pic="")
         elif instance.user_type==3:
@@ -184,7 +184,7 @@ def create_user_profile(sender,instance,created,**kwargs):
 # @receiver(post_save,sender=CustomUser)
 # def save_user_profile(sender,instance,**kwargs):
 #     if instance.user_type==1:
-#         instance.adminhod.save()
+#         instance.hod.save()
 #     if instance.user_type==2:
 #         instance.staffs.save()
 #     if instance.user_type==3:

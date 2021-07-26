@@ -158,9 +158,8 @@ def add_subject_save(request):
         return HttpResponse("<h2>Method Not Allowed</h2>")
     else:
         subject_name=request.POST.get("subject_name")
-        course_id=request.POST.get("department")
         session_id = request.POST.get('session')
-        department=Department.objects.get(id=course_id)
+        department = request.user.hod.dept_id
         staff_id=request.POST.get("staff")
         staff=CustomUser.objects.get(id=staff_id)
         session_year_id = SessionYearModel.objects.get(id=session_id)

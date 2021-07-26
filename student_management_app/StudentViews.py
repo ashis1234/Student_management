@@ -21,7 +21,7 @@ def student_home(request):
     if request.user.is_anonymous:
         raise Http404("Anonymous User Hasn't Authorize To Access Students Page")
     elif request.user.user_type == '1':
-        raise Http404("AdminHod Hasn't Authorize To Access Students Page")
+        raise Http404("Hod Hasn't Authorize To Access Students Page")
     elif request.user.user_type == '2':
         raise Http404("Staffs Hasn't Authorize To Access Students Page")
     elif request.user.user_type == '0':

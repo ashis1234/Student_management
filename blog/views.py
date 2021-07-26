@@ -85,7 +85,7 @@ def HomeviewUtill(request,blog_posts):
 	
 	context = get_top_post()
 	context['search'] = True
-	user = CustomUser.objects.get(id=5)
+	# user = CustomUser.objects.get(id=5)
 	
 	# for ass in Assignment.objects.all():
 	# 	ass.staff = user
@@ -101,7 +101,7 @@ def HomeviewUtill(request,blog_posts):
 	# for user in Principal.objects.all():
 	# 	print(user.admin.username)
 	# print()
-	# for user in AdminHOD.objects.all():
+	# for user in HOD.objects.all():
 	# 	print(user.admin.username)
 	# print()
 	# for user in Staffs.objects.all():

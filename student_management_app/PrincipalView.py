@@ -189,7 +189,7 @@ def edit_staff(request,staff_id):
     form.fields['last_name'].initial=staff.last_name
     form.fields['username'].initial=staff.username
     if staff.user_type=='1':
-        hod = AdminHOD.objects.get(admin=staff)
+        hod = HOD.objects.get(admin=staff)
         form.fields['address'].initial=hod.address
     else:
         staff = Staffs.objects.get(admin=staff)
@@ -240,7 +240,7 @@ def edit_staff_save(request):
                 if user.user_type=='2':
                     staff=Staffs.objects.get(admin=user)
                 else:
-                    staff = AdminHOD.objects.get(admin=user)
+                    staff = HOD.objects.get(admin=user)
                 staff.address=address
                 if profile_pic_url!=None:
                     staff.profile_pic=profile_pic_url
@@ -325,7 +325,7 @@ def staff_feedback_message(request):
         feedback = FeedBack.objects.filter(user=user_obj)
         feedbacks += feedback
 
-    for hod in AdminHOD.objects.all():
+    for hod in HOD.objects.all():
         user_obj = CustomUser.objects.get(id = hod.admin.id)
         feedback = FeedBack.objects.filter(user=user_obj)
         feedbacks += feedback
@@ -400,7 +400,7 @@ def edit_hod_save(request):
     else:
         hod_id=request.session.get("hod_id")
         if hod_id==None:
-            return HttpResponseRedirect(reverse("admin_home"))
+            return HttpResponseRedirect(reverse("principal_home"))
 
         form=EditHODForm(request.POST,request.FILES)
         if form.is_valid():
@@ -429,7 +429,7 @@ def edit_hod_save(request):
                 hod.save()
                 del request.session['hod_id']
                 messages.success(request,"Successfully Edited hod")
-                return HttpResponseRedirect(reverse("admin_home"))
+                return HttpResponseRedirect(reverse("principal_home"))
             except:
                 messages.error(request,"Failed to Edit hod")
                 return HttpResponseRedirect(reverse("edit_hod",kwargs={"hod_id":hod_id}))

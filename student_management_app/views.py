@@ -109,7 +109,7 @@ def doLogin(request):
                 return HttpResponseRedirect("student_home")
 
         else:
-            messages.error(request,"Invalid Login Details")
+            messages.error(request,"Invalid Login Credentials")
             return HttpResponseRedirect(reverse("show_login"))
 
 
@@ -186,7 +186,7 @@ def do_principal_signup(request):
     if request.method != 'POST':
         raise Http404('method not allowed')
     if check_email_username(request):
-        return HttpResponseRedirect(reverse('show_login'))
+        return HttpResponseRedirect(reverse('signup_principal'))
     
     username=request.POST.get("username")
     email=request.POST.get("email")
@@ -204,15 +204,15 @@ def do_hod_signup(request):
     if request.method != 'POST':
         raise Http404('method not allowed')
     if check_email_username(request):
-        return HttpResponseRedirect(reverse('show_login'))
+        return HttpResponseRedirect(reverse('signup_admin'))
     
     username=request.POST.get("username")
     email=request.POST.get("email")
     password=request.POST.get("password")
     try:
         user=CustomUser.objects.create_user(username=username,password=password,email=email,user_type=1)
+        user.hod.address=address
         user.save()
-        print(user.user_type)
         messages.success(request,"Successfully Created Admin")
         return HttpResponseRedirect(reverse("show_login"))
     except Exception as e:
@@ -224,7 +224,7 @@ def do_staff_signup(request):
     if request.method != 'POST':
         raise Http404('method not allowed')
     if check_email_username(request):
-        return HttpResponseRedirect(reverse('show_login'))
+        return HttpResponseRedirect(reverse('signup_staff'))
     
     username=request.POST.get("username")
     email=request.POST.get("email")
@@ -247,7 +247,7 @@ def do_signup_student(request):
     if request.method != 'POST':
         raise Http404('method not allowed')
     if check_email_username(request):
-        return HttpResponseRedirect(reverse('show_login'))
+        return HttpResponseRedirect(reverse('signup_student'))
     
     username=request.POST.get("username")
     email=request.POST.get("email")
@@ -346,7 +346,7 @@ def Delete(request,type,id):
                 elif type == 'staff':
                     user = CustomUser.objects,get(id=id)
                     if user.user_type == '1':
-                        staff = AdminHOD.objects.get(admin=user)
+                        staff = HOD.objects.get(admin=user)
                     else:
                         staff = Staffs.objects.get(admin=user)
                     

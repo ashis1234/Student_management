@@ -26,7 +26,7 @@ def staff_home(request):
     if request.user.is_anonymous:
         raise Http404("Anonymous User Hasn't Authorize To Access Teacher Page")
     elif request.user.user_type == '1':
-        raise Http404("AdminHod Hasn't Authorize To Access Teacher Page")
+        raise Http404("Hod Hasn't Authorize To Access Teacher Page")
     elif request.user.user_type == '3':
         raise Http404("Students Hasn't Authorize To Access Teacher Page")
     elif request.user.user_type == '0':
@@ -211,9 +211,9 @@ def Assignment_upload(request):
         subjects = Subjects.objects.filter(staff_id=user_id)
         return render(request,'staff_template/assignment_upload.html',{'subjects' : subjects})
     else:
+        user_id = request.user.id
+        user = CustomUser.objects.get(id=user_id)
         subject_id = request.POST.get('subject_id')
-
-    
         if request.FILES.get('assignment',False):
             assignment=request.FILES['assignment']
             fs=FileSystemStorage()
@@ -224,16 +224,20 @@ def Assignment_upload(request):
         if assignment_url == None:
             messages.error(request,'Please add assignment....')
             return HttpResponseRedirect(reverse('assignment_upload'))
+        
         title = request.POST.get('title')
         deadline = request.POST.get('deadline')
         subject_obj = Subjects.objects.get(id=subject_id)
         try:
-            assignment = Assignment(title=title,subject_id=subject_obj,deadline=deadline,assignment=assignment_url)
+            print(title,deadline,subject_obj,assignment_url)
+            assignment = Assignment(staff=user,title=title,subject_id=subject_obj,deadline=deadline,assignment=assignment_url)
             assignment.save()
             messages.success(request,'Assignment Upload Successfully')
             return HttpResponseRedirect(reverse('assignment_upload'))
         except Exception as e:
+            print()
             print(e)
+            print()
             messages.error(request,'assignment not upload')
             return HttpResponseRedirect(reverse('assignment_upload'))
     messages.error(request,'assignment not upload')
