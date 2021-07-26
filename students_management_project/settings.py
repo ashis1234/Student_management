@@ -139,9 +139,7 @@ MEDIA_URL = '/media/'
 STATIC_ROOT = os.path.join(BASE_DIR,'staticfiles')
 
 MEDIA_ROOT = os.path.join(BASE_DIR,'media')
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR,'static'),
-    )
+
 
 AUTH_USER_MODEL="student_management_app.CustomUser"
 AUTHENTICATION_BACKENDS=['student_management_app.EmailBackEnd.EmailBackEnd']
