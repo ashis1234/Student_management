@@ -12,12 +12,12 @@
       <!-- Sidebar user panel (optional) -->
       <div class="user-panel mt-3 pb-3 mb-3 d-flex">
         <div class="image">
-           {% if user.user_type == '0' %}
+           {% if user.user_type == 0 %}
               <img src="{{ user.profilePic }}" class="img-circle elevation-2" alt="User Image">
-           {% elif user.user_type == '1' %}
+           {% elif user.user_type == 1 %}
                   <img src="{{ user.profilePic }}" class="img-circle elevation-2" alt="User Image">
             
-            {% elif user.user_type == '2' %} 
+            {% elif user.user_type == 2 %} 
                   <img src="{{user.profilePic}}" class="img-circle elevation-2" alt="User Image">
               
             {% else %}
@@ -26,11 +26,11 @@
             {% endif %} 
         </div>
         <div class="info">
-          {% if user.user_type == '0' %}
+          {% if user.user_type == 0 %}
             <a href="{% url 'edit_hod' user.id %}" class="d-block">{{ user.username }}</a>
-          {% elif user.user_type == '1' %}
+          {% elif user.user_type == 1 %}
             <a href="{% url 'edit_staff' user.id %}" class="d-block">{{ user.username }}</a>
-          {% elif user.user_type == '2' %}
+          {% elif user.user_type == 2 %}
             <a href="{% url 'edit_staff' user.id %}" class="d-block">{{ user.username }}</a>
           {% else %}
             <a href="{% url 'edit_student' user.id %}" class="d-block">{{ user.username }}</a>
@@ -42,13 +42,13 @@
       <nav class="mt-2">
         <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
           <li class="nav-item">
-            {% if user.user_type == '0' %}
+            {% if user.user_type == 0 %}
               {% url 'principal_home' as principal_home %}
               <a href="{{ principal_home }}" class="nav-link {% if request.path == principal_home %} active {% endif %}">
-            {% elif user.user_type == '1' %}
+            {% elif user.user_type == 1 %}
               {% url 'admin_home' as admin_home %}
               <a href="{{ admin_home }}" class="nav-link {% if request.path == admin_home %} active {% endif %}">
-            {% elif user.user_type == '2' %}
+            {% elif user.user_type == 2 %}
               {% url 'staff_home' as staff_home %}
               <a href="{{ staff_home }}" class="nav-link {% if request.path == staff_home %} active {% endif %}">
             {% else %}
@@ -107,7 +107,7 @@
 
 
           <!-- end post section -->
-          {% if user.user_type == '0' %}
+          {% if user.user_type == 0 %}
           <!-- Staff Section -->
           <li class="nav-item has-treeview">
             <a href="#" class="nav-link">
@@ -190,7 +190,7 @@
           </li>
           {% endif %}
 
-        {% if user.user_type == '1' or user.user_type == '0' %}
+        {% if user.user_type == 1 or user.user_type == 0 %}
           
           <li class="nav-item has-treeview">
             <a href="#" class="nav-link">
@@ -211,7 +211,7 @@
                   </p>
                 </a>
               </li>
-              {% if user.user_type == '1' %}
+              {% if user.user_type == 1 %}
               <li class="nav-item">
                {% url 'student_feedback_message' as student_feedback_message %}
               <a href="{% url 'student_feedback_message' %}" class="nav-link {% if request.path == student_feedback_message %} active {% endif %}">
@@ -248,7 +248,7 @@
         {% endif %}
         <!-- end student section -->
         <!-- Course Section -->
-        {% if user.user_type == '1' or user.user_type == '2' %}
+        {% if user.user_type == 1 or user.user_type == 2 %}
         <li class="nav-item has-treeview">
           <a href="#" class="nav-link">
             <i class="nav-icon fas fa-copy"></i>
@@ -282,7 +282,7 @@
         </li>
         {% endif %}
         <!-- Staff take Attendance -->
-        {% if user.user_type == '2' or user.user_type == '1' %}
+        {% if user.user_type == 2 or user.user_type == 1 %}
         <li class="nav-item has-treeview">
           <a href="#" class="nav-link">
             <i class="nav-icon fas fa-copy"></i>
@@ -370,7 +370,7 @@
        <!-- student extra end -->
         {% endif %}
         
-        {% if user.user_type != '0' %}
+        {% if user.user_type != 0 %}
         <li class="nav-item">
           {% url 'apply_leave' as apply_leave %}
           <a href="{{ apply_leave }}" class="nav-link {% if request.path == apply_leave %} active {% endif %}">

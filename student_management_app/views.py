@@ -14,47 +14,58 @@ from django.urls import reverse
 from student_management_app.EmailBackEnd import EmailBackEnd
 from .models import *
 from django.conf import settings
-
+from user.models import User
 
 from django.contrib.auth.models import User, Group
 from rest_framework import viewsets
 from rest_framework import permissions
-# from .serializers import *
+from .serializers import *
 
 
-# class SessionYearModelViewSet(viewsets.ModelViewSet):
-#     queryset = SessionYearModel.objects.all()
-#     serializer_class = SessionYearModelSerializer
-#     permission_classes = [permissions.IsAuthenticated]
+class SessionYearModelViewSet(viewsets.ModelViewSet):
+    queryset = SessionYearModel.objects.all()
+    serializer_class = SessionYearModelSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 
-# class CustomUSerViewSet(viewsets.ModelViewSet):
-#     queryset = CustomUser.objects.all()
-#     serializer_class = CustomSerializer
-#     permission_classes = [permissions.IsAuthenticated]
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = CustomSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 
-# class StaffsViewSet(viewsets.ModelViewSet):
-#     queryset = Staffs.objects.all()
-#     serializer_class = StaffsSerializer
-#     permission_classes = [permissions.IsAuthenticated]
+class StaffsViewSet(viewsets.ModelViewSet):
+    queryset = Staffs.objects.all()
+    serializer_class = StaffsSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-# class StudentsViewSet(viewsets.ModelViewSet):
-#     queryset = Students.objects.all()
-#     serializer_class = StudentsSerializer
-#     permission_classes = [permissions.IsAuthenticated]
+class HODsViewSet(viewsets.ModelViewSet):
+    queryset = HOD.objects.all()
+    serializer_class = HODsSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class PrincipalViewSet(viewsets.ModelViewSet):
+    queryset = Principal.objects.all()
+    serializer_class = PrincipalSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+class StudentsViewSet(viewsets.ModelViewSet):
+    queryset = Students.objects.all()
+    serializer_class = StudentsSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 
 
-# class SubjectsViewSet(viewsets.ModelViewSet):
-#     queryset = Subjects.objects.all()
-#     serializer_class = SubjectsSerializer
-#     permission_classes = [permissions.IsAuthenticated]
+class SubjectsViewSet(viewsets.ModelViewSet):
+    queryset = Subjects.objects.all()
+    serializer_class = SubjectsSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-# class CoursesViewSet(viewsets.ModelViewSet):
-#     queryset = Courses.objects.all()
-#     serializer_class = CoursesSerializer
-#     permission_classes = [permissions.IsAuthenticated]
+class DepartmentViewSet(viewsets.ModelViewSet):
+    queryset = Department.objects.all()
+    serializer_class = DepartmentSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 
 
@@ -99,11 +110,11 @@ def doLogin(request):
             if LoginFrom:
                 return HttpResponseRedirect(reverse(LoginFrom))
             
-            if user.user_type=='0':
+            if user.user_type==0:
                 return HttpResponseRedirect('principal_home')
-            elif user.user_type=="1":
+            elif user.user_type==1:
                 return HttpResponseRedirect('admin_home')
-            elif user.user_type=="2":
+            elif user.user_type==2:
                 return HttpResponseRedirect("staff_home")
             else:
                 return HttpResponseRedirect("student_home")
@@ -172,11 +183,11 @@ def signup_staff(request):
 def check_email_username(request):
     username=request.POST.get("username")
     email=request.POST.get("email")
-    user_obj=CustomUser.objects.filter(username=username).exists()
+    user_obj=User.objects.filter(username=username).exists()
     if user_obj:
         messages.error(request,'Username already exists')
         return True
-    user_obj=CustomUser.objects.filter(email=email).exists()
+    user_obj=User.objects.filter(email=email).exists()
     if user_obj:
         messages.error(request,'Email already exists')
         return True
@@ -192,7 +203,7 @@ def do_principal_signup(request):
     email=request.POST.get("email")
     password=request.POST.get("password")
     try:
-        user=CustomUser.objects.create_user(username=username,password=password,email=email,user_type=0)
+        user=User.objects.create_user(username=username,password=password,email=email,user_type=0)
         user.save()
         messages.success(request,"Successfully Created Admin")
         return HttpResponseRedirect(reverse("show_login"))
@@ -210,7 +221,7 @@ def do_hod_signup(request):
     email=request.POST.get("email")
     password=request.POST.get("password")
     try:
-        user=CustomUser.objects.create_user(username=username,password=password,email=email,user_type=1)
+        user=User.objects.create_user(username=username,password=password,email=email,user_type=1)
         user.hod.address=address
         user.save()
         messages.success(request,"Successfully Created Admin")
@@ -231,7 +242,7 @@ def do_staff_signup(request):
     password=request.POST.get("password")
     address=request.POST.get("address")
     try:
-        user=CustomUser.objects.create_user(username=username,password=password,email=email,user_type=2)
+        user=User.objects.create_user(username=username,password=password,email=email,user_type=2)
         user.staffs.address=address
         user.save()
         messages.success(request,"Successfully Created Staff")
@@ -259,7 +270,7 @@ def do_signup_student(request):
     session_year_id = SessionYearModel.objects.get(id=session_year)
 
     try:
-        user=CustomUser.objects.create_user(username=username,password=password,email=email,user_type=3)
+        user=User.objects.create_user(username=username,password=password,email=email,user_type=3)
         user.student.address = address
         user.student.dept_id = dept_id
         user.student.session_year_id = session_year_id
@@ -275,7 +286,7 @@ def apply_leave(request):
     user_type = request.session.get('user_type',-1)
     if user_type not in ['0','1','2']:
         raise Http404('method not allowed')
-    user_obj = CustomUser.objects.get(id=request.user.id)
+    user_obj = User.objects.get(id=request.user.id)
     leave_data=LeaveReport.objects.filter(user=user_obj)
     return render(request,"leave.html",{"leave_data":leave_data})
 
@@ -289,7 +300,7 @@ def apply_leave_save(request):
     else:
         leave_date=request.POST.get("leave_date")
         leave_msg=request.POST.get("leave_msg")
-        user_obj = CustomUser.objects.get(id=request.user.id)
+        user_obj = User.objects.get(id=request.user.id)
         try:
             leave_report=LeaveReport(user=user_obj,leave_date=leave_date,leave_message=leave_msg,leave_status=0)
             leave_report.save()
@@ -305,7 +316,7 @@ def feedback(request):
     user_type = request.session.get('user_type',-1)
     if user_type not in ['0','1','2']:
         raise Http404('method not allowed')
-    user_obj = CustomUser.objects.get(id=request.user.id)
+    user_obj = User.objects.get(id=request.user.id)
     feedback_data=FeedBack.objects.filter(user=user_obj)
     return render(request,"feedback.html",{"feedback_data":feedback_data})
 
@@ -317,7 +328,7 @@ def feedback_save(request):
         return HttpResponseRedirect(reverse("feedback_save"))
     else:
         feedback_msg=request.POST.get("feedback_msg")
-        user_obj = CustomUser.objects.get(id=request.user.id)
+        user_obj = User.objects.get(id=request.user.id)
         try:
             feedback=FeedBack(user=user_obj,feedback=feedback_msg,feedback_reply="")
             feedback.save()
@@ -341,10 +352,10 @@ def Delete(request,type,id):
                     messages.success(request,type.capitalize() + ' Deleted Successfully')
                 elif type == "student":
                     student = Students.objects.get(id=id)
-                    CustomUser.objects.filter(id=student.admin.id).delete()
+                    User.objects.filter(id=student.admin.id).delete()
                     messages.success(request,type.capitalize() + ' Deleted Successfully')
                 elif type == 'staff':
-                    user = CustomUser.objects,get(id=id)
+                    user = User.objects,get(id=id)
                     if user.user_type == '1':
                         staff = HOD.objects.get(admin=user)
                     else:
@@ -385,7 +396,7 @@ def Delete(request,type,id):
 
 def ProfileView(request,user):
     try:
-        user = CustomUser.objects.get(username=user)
+        user = User.objects.get(username=user)
     except Exception as e:
         return HttpResponse("user Not Exist")
     return HttpResponse("user Exist")

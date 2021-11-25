@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
-
+import datetime
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -23,9 +23,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'ldg2+i&56qf$2=-4y96(z8(+=b5$mq9g%vx(@zj^($bnh-*!p('
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ["jgec-management.herokuapp.com","127.0.0.1"]
+ALLOWED_HOSTS = []
 
 
 
@@ -42,9 +42,10 @@ INSTALLED_APPS = [
     'blog',
     'ckeditor',
     'mptt',
+    'user',
     # 'rest_framework.authtoken',
     # 'corsheaders',
-    # 'rest_framework',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -140,15 +141,30 @@ STATIC_ROOT = os.path.join(BASE_DIR,'staticfiles')
 
 MEDIA_ROOT = os.path.join(BASE_DIR,'media')
 
+AUTH_USER_MODEL="user.User"
 
-AUTH_USER_MODEL="student_management_app.CustomUser"
-AUTHENTICATION_BACKENDS=['student_management_app.EmailBackEnd.EmailBackEnd']
-ITEM_PER_PAGE = 1
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': datetime.timedelta(minutes=20),
+    'REFRESH_TOKEN_LIFETIME': datetime.timedelta(days=1),
+}
+
+
+LOGIN_REDIRECT_URL = 'store'
+LOGOUT_REDIRECT_URL = 'store'
+STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
+
+MEDIA_ROOT = os.path.join(BASE_DIR,'media')
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR,'static'),
     )
-# STATICFILES_STORAGE='whitenoise.storage.CompressedManifestStaticFilesStorage'
-# import dj_database_url
-# prod_db=dj_database_url.config(conn_max_age=500)
-# DATABASES['default'].update(prod_db)
 
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'ghoshashis545@gmail.com'
+EMAIL_HOST_PASSWORD = 'AshisJgec@123'
+
+
+ITEM_PER_PAGE  = 5

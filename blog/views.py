@@ -85,7 +85,7 @@ def HomeviewUtill(request,blog_posts):
 	
 	context = get_top_post()
 	context['search'] = True
-	# user = CustomUser.objects.get(id=5)
+	# user = User.objects.get(id=5)
 	
 	# for ass in Assignment.objects.all():
 	# 	ass.staff = user
@@ -95,9 +95,9 @@ def HomeviewUtill(request,blog_posts):
 
 	# print(request.user.id)
 
-	# for user in CustomUser.objects.all():
-	# 	print(user.username,user.user_type)
-	# print()
+	for user in User.objects.all():
+		print(user.username,user.user_type)
+	print()
 	# for user in Principal.objects.all():
 	# 	print(user.admin.username)
 	# print()
@@ -212,7 +212,7 @@ def Articledetails(request,pk,cmnt_id=None):
 # 	model = Post
 # 	form_class = PostForm
 # 	template_name = 'addpost.html'
-# 	print(CustomUser.user_type)
+# 	print(User.user_type)
 # 	success_url = reverse_lazy('admin_home')
 
 # class UpdatePost(UpdateView):
@@ -242,7 +242,7 @@ def add_post(request):
 			body = form.cleaned_data['body']
 			category = form.cleaned_data['category']
 			featured = form.cleaned_data['featured']
-			user = CustomUser.objects.get(id=user_id)
+			user = User.objects.get(id=user_id)
 			category1 = []
 			if Post.objects.filter(title=title).exists():
 				messages.error(request,"Title already exists")
@@ -326,7 +326,7 @@ def edit_post_save(request):
 			body = form.cleaned_data['body']
 			category = form.cleaned_data['category']
 			featured = form.cleaned_data['featured']
-			user = CustomUser.objects.get(id=user_id)
+			user = User.objects.get(id=user_id)
 			post = Post.objects.get(id=post_id)
 			
 			if post.title != title and Post.objects.filter(title=title).exists():
@@ -423,7 +423,7 @@ def AddComments(request):
 
 
 	post = Post.objects.get(id=post_id)
-	user = CustomUser.objects.get(id=user_id)
+	user = User.objects.get(id=user_id)
 	parent = None
 	if parent_comment_id:
 		parent = Comment.objects.get(id=parent_comment_id)
@@ -439,7 +439,7 @@ def DisLikeView(request):
 	post_id = int(request.POST.get('post_id'))
 	user_id = int(request.POST.get('user_id'))
 	post = get_object_or_404(Post,id=post_id)
-	user_obj = CustomUser.objects.get(id=user_id)
+	user_obj = User.objects.get(id=user_id)
 	if post.author.id == user_id:
 		return HttpResponse("same user")
 	try:
@@ -459,7 +459,7 @@ def LikeView(request):
 	post_id = int(request.POST.get('post_id'))
 	user_id = int(request.POST.get('user_id'))
 	post = get_object_or_404(Post,id=post_id)
-	user_obj = CustomUser.objects.get(id=user_id)
+	user_obj = User.objects.get(id=user_id)
 	try:
 		print(post.author.id,user_id)
 		if post.author.id == user_id:
@@ -481,7 +481,7 @@ def LikeCommentView(request):
 	post_id  = int(request.POST.get('post_id'))
 	user_id  = int(request.POST.get('user_id'))
 	cmnt_id=int(request.POST.get('cmnt_id'))
-	user_obj = CustomUser.objects.get(id=user_id)
+	user_obj = User.objects.get(id=user_id)
 	cmnt_obj = Comment.objects.get(id=cmnt_id)
 	if cmnt_obj.user.id == user_id:
 		return HttpResponse("same user")
@@ -502,7 +502,7 @@ def DisLikeCommentView(request):
 	post_id  = int(request.POST.get('post_id'))
 	user_id  = int(request.POST.get('user_id'))
 	cmnt_id=int(request.POST.get('cmnt_id'))
-	user_obj = CustomUser.objects.get(id=user_id)
+	user_obj = User.objects.get(id=user_id)
 	cmnt_obj = Comment.objects.get(id=cmnt_id)
 	if cmnt_obj.user.id == user_id:
 		return HttpResponse("same user")

@@ -10,7 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DeleteView
 from .models import *
 from django.core.files.storage import FileSystemStorage
-
+from user.models import User
 
 def check_valid_user_access_the_page(request):
     user_type = request.session.get('user_type',-1)
@@ -25,11 +25,11 @@ def staff_home(request):
 
     if request.user.is_anonymous:
         raise Http404("Anonymous User Hasn't Authorize To Access Teacher Page")
-    elif request.user.user_type == '1':
+    elif request.user.user_type == 1:
         raise Http404("Hod Hasn't Authorize To Access Teacher Page")
-    elif request.user.user_type == '3':
+    elif request.user.user_type == 3:
         raise Http404("Students Hasn't Authorize To Access Teacher Page")
-    elif request.user.user_type == '0':
+    elif request.user.user_type == 0:
         raise Http404("Principal Hasn't Authorize To Access teacher Page")
     
     else:
@@ -41,7 +41,7 @@ def staff_home(request):
         attendance_count=Attendance.objects.filter(subject_id__in=subjects).count()
 
         #Fetch All Approve Leave
-        user=CustomUser.objects.get(id=request.user.id)
+        user=User.objects.get(id=request.user.id)
         leave_count=LeaveReport.objects.filter(user=user,leave_status=1).count()
         subject_count=subjects.count()
         post_count = Post.objects.filter(author=request.user.id).count()
@@ -53,7 +53,7 @@ def staff_home(request):
 
 def staff_profile(request):
     check_valid_user_access_the_page(request)
-    user=CustomUser.objects.get(id=request.user.id)
+    user=User.objects.get(id=request.user.id)
     staff=Staffs.objects.get(admin=user)
     return render(request,"staff_template/staff_profile.html",{"user":user,"staff":staff})
 
@@ -67,14 +67,14 @@ def staff_profile_save(request):
         address=request.POST.get("address")
         password=request.POST.get("password")
         try:
-            customuser=CustomUser.objects.get(id=request.user.id)
-            customuser.first_name=first_name
-            customuser.last_name=last_name
+            User=User.objects.get(id=request.user.id)
+            User.first_name=first_name
+            User.last_name=last_name
             if password!=None and password!="":
-                customuser.set_password(password)
-            customuser.save()
+                User.set_password(password)
+            User.save()
 
-            staff=Staffs.objects.get(admin=customuser.id)
+            staff=Staffs.objects.get(admin=User.id)
             staff.address=address
             staff.save()
             messages.success(request, "Successfully Updated Profile")
@@ -212,7 +212,7 @@ def Assignment_upload(request):
         return render(request,'staff_template/assignment_upload.html',{'subjects' : subjects})
     else:
         user_id = request.user.id
-        user = CustomUser.objects.get(id=user_id)
+        user = User.objects.get(id=user_id)
         subject_id = request.POST.get('subject_id')
         if request.FILES.get('assignment',False):
             assignment=request.FILES['assignment']
@@ -246,7 +246,7 @@ def Assignment_upload(request):
 
 def assignment_check(request):
     check_valid_user_access_the_page(request)
-    user = CustomUser.objects.get(id=request.user.id)
+    user = User.objects.get(id=request.user.id)
     assignment = []
     subjects = Subjects.objects.filter(staff_id=user)
     for sub in subjects:

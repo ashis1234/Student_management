@@ -2,13 +2,13 @@ from django.contrib.auth.forms import SetPasswordForm
 from django import forms
 from django.core import validators
 from .models import *
-from student_management_app.models import CustomUser
+from user.models import User
 from django_mysql.forms import SimpleListField
 
 
 class PasswordChange(SetPasswordForm):
 	class Meta:
-		model = CustomUser
+		model = User
 		fields = ('new_password1','new_password2')
 			
 	def __init__(self, *arg,**kwargs):

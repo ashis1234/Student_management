@@ -10,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import get_user_model
 from .models import *
 from django.core.files.storage import FileSystemStorage
+from user.models import User
 
 def check_valid_user_access_the_page(request):
     user_type = request.session.get('user_type',-1)
@@ -20,15 +21,21 @@ def check_valid_user_access_the_page(request):
 def student_home(request):
     if request.user.is_anonymous:
         raise Http404("Anonymous User Hasn't Authorize To Access Students Page")
-    elif request.user.user_type == '1':
+    elif request.user.user_type == 1:
         raise Http404("Hod Hasn't Authorize To Access Students Page")
-    elif request.user.user_type == '2':
+    elif request.user.user_type == 2:
         raise Http404("Staffs Hasn't Authorize To Access Students Page")
-    elif request.user.user_type == '0':
+    elif request.user.user_type == 0:
         raise Http404("Principal Hasn't Authorize To Access student Page")
     
     else:
-        student_obj=Students.objects.get(admin=request.user.id)
+        print(request.user.id)
+        for i in Students.objects.all():
+            print(i.admin)
+        # student_obj=Students.objects.get(admin=request.user.id)
+        user_obj = User.objects.get(id = request.user.id)
+        # return HttpResponse("snjs")
+        student_obj=Students.objects.get(admin=user_obj)
         attendance_total=AttendanceReport.objects.filter(student_id=student_obj).count()
         attendance_present=AttendanceReport.objects.filter(student_id=student_obj,status=True).count()
         attendance_absent=AttendanceReport.objects.filter(student_id=student_obj,status=False).count()
@@ -57,7 +64,7 @@ def student_home(request):
 
 def student_profile(request):
     check_valid_user_access_the_page(request)
-    user=CustomUser.objects.get(id=request.user.id)
+    user=User.objects.get(id=request.user.id)
     student=Students.objects.get(admin=user)
     return render(request,"student_template/student_profile.html",{"user":user,"student":student})
 
@@ -71,11 +78,11 @@ def student_profile_save(request):
         password=request.POST.get("password")
         address=request.POST.get("address")
         try:
-            customuser=CustomUser.objects.get(id=request.user.id)
-            customuser.first_name=first_name
-            customuser.last_name=last_name
-            customuser.save()
-            student=Students.objects.get(admin=customuser)
+            User=User.objects.get(id=request.user.id)
+            User.first_name=first_name
+            User.last_name=last_name
+            User.save()
+            student=Students.objects.get(admin=User)
             student.address=address
             student.save()
             messages.success(request, "Successfully Updated Profile")
@@ -108,7 +115,7 @@ def student_view_attendance_post(request):
     start_data_parse=datetime.strptime(start_date,"%Y-%m-%d").date()
     end_data_parse=datetime.strptime(end_date,"%Y-%m-%d").date()
     subject_obj=Subjects.objects.get(id=subject_id)
-    user_object=CustomUser.objects.get(id=request.user.id)
+    user_object=User.objects.get(id=request.user.id)
     stud_obj=Students.objects.get(admin=user_object)
 
     attendance=Attendance.objects.filter(attendance_date__range=(start_data_parse,end_data_parse),subject_id=subject_obj)
@@ -117,7 +124,7 @@ def student_view_attendance_post(request):
 
 def assignment_view(request):
     check_valid_user_access_the_page(request)
-    user_obj = CustomUser(id=request.user.id)
+    user_obj = User(id=request.user.id)
     session_year = user_obj.student.session_year_id
     subjects = Subjects.objects.filter(session_year=session_year)
     assignment1 = Assignment.objects.filter(subject_id__in=subjects)
@@ -141,7 +148,7 @@ def assignment_save(request):
     if request.method != 'POST':
         return Http404(request,'method Not Allowed')
     else:
-        user = CustomUser.objects.get(id=request.user.id)
+        user = User.objects.get(id=request.user.id)
         assignment_id = request.session['assignment_id']
         assignment_obj = Assignment.objects.get(id=assignment_id)
 

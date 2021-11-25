@@ -2,7 +2,6 @@ import json
 from django.views.generic import ListView,DetailView,CreateView,UpdateView,DeleteView
 import requests
 from django.contrib import messages
-from django.contrib.auth.models import User
 from django.core.files.storage import FileSystemStorage
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse,Http404
 from django.shortcuts import render
@@ -11,11 +10,12 @@ from django.views.decorators.csrf import csrf_exempt
 from blog.forms import PostForm,EditForm
 from .forms import *
 from django.db.models import Q
-from .models import CustomUser, Staffs, Department, Subjects, Students, SessionYearModel,FeedBack,LeaveReport, Attendance, AttendanceReport
+from .models import Staffs, Department, Subjects, Students, SessionYearModel,FeedBack,LeaveReport, Attendance, AttendanceReport
 from django.urls import reverse_lazy,reverse
 from blog.models import *
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from students_management_project.settings import ITEM_PER_PAGE
+from user.models import User
 
 def check_valid_user_access_the_page(request):
     user_type = request.session.get('user_type',-1)
@@ -81,7 +81,7 @@ def principal_home(request):
             subject_ids=Subjects.objects.filter(staff_id=staff.admin.id)
             attendance=Attendance.objects.filter(subject_id__in=subject_ids).count()
         #LeaveReport       
-            custom_user = CustomUser.objects.get(id = staff.admin.id)
+            custom_user = User.objects.get(id = staff.admin.id)
             leaves=LeaveReport.objects.filter(user=custom_user,leave_status=1).count()
             attendance_present_list_staff.append(attendance)
             attendance_absent_list_staff.append(leaves)
@@ -98,7 +98,7 @@ def principal_home(request):
             attendance=AttendanceReport.objects.filter(student_id=student.id,status=True).count()
             absent=AttendanceReport.objects.filter(student_id=student.id,status=False).count()
             # LeaveReportStudentl
-            custom_user = CustomUser.objects.get(id = student.admin.id)
+            custom_user = User.objects.get(id = student.admin.id)
             leaves=LeaveReport.objects.filter(user=custom_user,leave_status=1).count()
             attendance_present_list_student.append(attendance)
             attendance_absent_list_student.append(leaves+absent)
@@ -167,7 +167,7 @@ def edit_department_save(request):
 
 def manage_staff(request):
     check_valid_user_access_the_page(request)
-    staffs = CustomUser.objects.filter(user_type=1) | CustomUser.objects.filter(user_type=2)
+    staffs = User.objects.filter(user_type=1) | User.objects.filter(user_type=2)
     context = {}
     pagination_req,staffs = Pagination_handle(request,staffs)
     context['pagination_req'] = pagination_req
@@ -182,7 +182,7 @@ def edit_staff(request,staff_id):
 
     request.session['staff_id']=staff_id
 
-    staff=CustomUser.objects.get(id=staff_id)
+    staff=User.objects.get(id=staff_id)
     form=EditStaffForm()
     form.fields['email'].initial=staff.email
     form.fields['first_name'].initial=staff.first_name
@@ -230,7 +230,7 @@ def edit_staff_save(request):
                 profile_pic_url=None
             try:
 
-                user=CustomUser.objects.get(id=staff_id)
+                user=User.objects.get(id=staff_id)
                 user.first_name=first_name
                 user.last_name=last_name
                 user.username=username
@@ -301,7 +301,7 @@ def add_session_save(request):
 @csrf_exempt
 def check_email_exist(request):
     email=request.POST.get("email")
-    user_obj=CustomUser.objects.filter(email=email).exists()
+    user_obj=User.objects.filter(email=email).exists()
     if user_obj:
         return HttpResponse(True)
     else:
@@ -311,7 +311,7 @@ def check_email_exist(request):
 def check_username_exist(request):
     username=request.POST.get("username")
     print(username)
-    user_obj=CustomUser.objects.filter(username=username).exists()
+    user_obj=User.objects.filter(username=username).exists()
     if user_obj:
         return HttpResponse(True)
     else:
@@ -321,12 +321,12 @@ def staff_feedback_message(request):
     check_valid_user_access_the_page(request)
     feedbacks = []
     for staff in Staffs.objects.all():
-        user_obj = CustomUser.objects.get(id = staff.admin.id)
+        user_obj = User.objects.get(id = staff.admin.id)
         feedback = FeedBack.objects.filter(user=user_obj)
         feedbacks += feedback
 
     for hod in HOD.objects.all():
-        user_obj = CustomUser.objects.get(id = hod.admin.id)
+        user_obj = User.objects.get(id = hod.admin.id)
         feedback = FeedBack.objects.filter(user=user_obj)
         feedbacks += feedback
     context = {}
@@ -355,7 +355,7 @@ def staff_leave_view(request):
     #LeaveReport   
     leaves = []
     for staff in Staffs.objects.all():
-        user_obj = CustomUser.objects.get(id = staff.admin.id)
+        user_obj = User.objects.get(id = staff.admin.id)
         leave=LeaveReport.objects.filter(user=user_obj)
         leaves += leave
     context = {}
@@ -416,7 +416,7 @@ def edit_hod_save(request):
             except:
                 profile_pic_url=None
             try:
-                user=CustomUser.objects.get(id=hod_id)
+                user=User.objects.get(id=hod_id)
                 user.first_name=first_name
                 user.last_name=last_name
                 user.username=username

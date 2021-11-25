@@ -2,7 +2,6 @@ import json
 from django.views.generic import ListView,DetailView,CreateView,UpdateView,DeleteView
 import requests
 from django.contrib import messages
-from django.contrib.auth.models import User
 from django.core.files.storage import FileSystemStorage
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse,Http404
 from django.shortcuts import render
@@ -10,11 +9,13 @@ from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from blog.forms import PostForm,EditForm
 from .forms import *
-from .models import CustomUser, Staffs, Department, Subjects, Students, SessionYearModel,FeedBack,LeaveReport, Attendance, AttendanceReport
+from .models import  Staffs, Department, Subjects, Students, SessionYearModel,FeedBack,LeaveReport, Attendance, AttendanceReport
 from django.urls import reverse_lazy,reverse
 from blog.models import *
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from students_management_project.settings import ITEM_PER_PAGE
+from user.models import User
+
 
 def check_valid_user_access_the_page(request):
     user_type = request.session.get('user_type',-1)
@@ -39,11 +40,11 @@ def Hod_home(request):
     print(request.user.user_type)
     if request.user.is_anonymous:
         raise Http404("Anonymous User Hasn't Authorize To Access Admin Page")
-    elif request.user.user_type == '3':
+    elif request.user.user_type == 3:
         raise Http404("Staff Hasn't Authorize To Access Admin Page")
-    elif request.user.user_type == '2':
+    elif request.user.user_type == 2:
         raise Http404("Students Hasn't Authorize To Access Admin Page")
-    elif request.user.user_type == '0':
+    elif request.user.user_type == 0:
         raise Http404("Principal Hasn't Authorize To Access Admin Page")
     else:
         dept_id = request.user.hod.dept_id
@@ -70,7 +71,7 @@ def Hod_home(request):
             subject_ids=Subjects.objects.filter(staff_id=staff.admin.id)
             attendance=Attendance.objects.filter(subject_id__in=subject_ids).count()
         #LeaveReport       
-            custom_user = CustomUser.objects.get(id = staff.admin.id)
+            custom_user = User.objects.get(id = staff.admin.id)
             leaves=LeaveReport.objects.filter(user=custom_user,leave_status=1).count()
             attendance_present_list_staff.append(attendance)
             attendance_absent_list_staff.append(leaves)
@@ -87,7 +88,7 @@ def Hod_home(request):
             attendance=AttendanceReport.objects.filter(student_id=student.id,status=True).count()
             absent=AttendanceReport.objects.filter(student_id=student.id,status=False).count()
             # LeaveReportStudentl
-            custom_user = CustomUser.objects.get(id = student.admin.id)
+            custom_user = User.objects.get(id = student.admin.id)
             leaves=LeaveReport.objects.filter(user=custom_user,leave_status=1).count()
             attendance_present_list_student.append(attendance)
             attendance_absent_list_student.append(leaves+absent)
@@ -111,7 +112,7 @@ def Hod_home(request):
 #         password=request.POST.get("password")
 #         address=request.POST.get("address")
 #         try:
-#             user=CustomUser.objects.create_user(username=username,password=password,email=email,last_name=last_name,first_name=first_name,user_type=2)
+#             user=User.objects.create_user(username=username,password=password,email=email,last_name=last_name,first_name=first_name,user_type=2)
 #             user.staff.address=address
 #             user.save()
 #             messages.success(request,"Successfully Added Staff")
@@ -134,7 +135,7 @@ def Hod_home(request):
 #         password=request.POST.get("password")
 #         address=request.POST.get("address")
 #         try:
-#             user=CustomUser.objects.create_user(username=username,password=password,email=email,last_name=last_name,first_name=first_name,user_type=3)
+#             user=User.objects.create_user(username=username,password=password,email=email,last_name=last_name,first_name=first_name,user_type=3)
 #             user.student.address=address
 #             user.save()
 #             messages.success(request,"Successfully Added Student")
@@ -149,7 +150,7 @@ def add_subject(request):
     check_valid_user_access_the_page(request)
     departments=Department.objects.all()
     session_year=SessionYearModel.objects.all()
-    staffs=CustomUser.objects.filter(user_type=2) | CustomUser.objects.filter(user_type=1)
+    staffs=User.objects.filter(user_type=2) | User.objects.filter(user_type=1)
     return render(request,"hod_template/add_subject_template.html",{"staffs":staffs,"departments":departments,'session_years':session_year})
 
 def add_subject_save(request):
@@ -161,7 +162,7 @@ def add_subject_save(request):
         session_id = request.POST.get('session')
         department = request.user.hod.dept_id
         staff_id=request.POST.get("staff")
-        staff=CustomUser.objects.get(id=staff_id)
+        staff=User.objects.get(id=staff_id)
         session_year_id = SessionYearModel.objects.get(id=session_id)
         try:
             subject=Subjects(subject_name=subject_name,dept_id=department,staff_id=staff,session_year=session_year_id)
@@ -250,7 +251,7 @@ def edit_student_save(request):
             else:
                 profile_pic_url=None
             try:
-                user=CustomUser.objects.get(id=student_id)
+                user=User.objects.get(id=student_id)
                 user.first_name=first_name
                 user.last_name=last_name
                 user.username=username
@@ -288,7 +289,7 @@ def edit_subject(request,subject_id):
     check_valid_user_access_the_page(request)
     subject=Subjects.objects.get(id=subject_id)
     departments=Department.objects.all()
-    staffs=CustomUser.objects.filter(user_type=2) | CustomUser.objects.filter(user_type=1)
+    staffs=User.objects.filter(user_type=2) | User.objects.filter(user_type=1)
     session_years = SessionYearModel.objects.all() 
     return render(request,"hod_template/edit_subject_template.html",{"subject":subject,"staffs":staffs,"departments":departments,"id":subject_id,'session_years':session_years})
 
@@ -306,7 +307,7 @@ def edit_subject_save(request):
         try:
             subject=Subjects.objects.get(id=subject_id)
             subject.subject_name=subject_name
-            staff=CustomUser.objects.get(id=staff_id)
+            staff=User.objects.get(id=staff_id)
             subject.staff_id=staff
             session_year_id = SessionYearModel.objects.get(id=session_year)
             department=Department.objects.get(id=dept_id)
@@ -329,7 +330,7 @@ def student_feedback_message(request):
     check_valid_user_access_the_page(request)
     feedbacks = []
     for student in Students.objects.all():
-        user_obj = CustomUser.objects.get(id = student.admin.id)
+        user_obj = User.objects.get(id = student.admin.id)
         feedback =FeedBack.objects.filter(user=user_obj)
         feedbacks += feedback
     context = {}
@@ -358,7 +359,7 @@ def student_leave_view(request):
     # LeaveReportStudentl
     leaves = []
     for student in Students.objects.all():
-        user_obj = CustomUser.objects.get(id = student.admin.id)
+        user_obj = User.objects.get(id = student.admin.id)
         leave=LeaveReport.objects.filter(user=user_obj)
         leaves += leave
     context = {}

@@ -6,7 +6,7 @@ from django.utils import timezone
 from ckeditor.fields import RichTextField
 from django.contrib.contenttypes.models import ContentType
 from mptt.models import MPTTModel, TreeForeignKey
-from student_management_app.models import CustomUser
+from user.models import User
 from django_mysql.models import ListCharField
 import math
 
@@ -16,13 +16,13 @@ import math
 	
 class Post(models.Model):
 	title        = models.CharField(max_length=250)
-	author       = models.ForeignKey(CustomUser,on_delete = models.CASCADE)
+	author       = models.ForeignKey(User,on_delete = models.CASCADE)
 	body         = RichTextField(blank=True,null=True)
 	post_date    = models.DateTimeField(auto_now_add = True)
-	likes        = models.ManyToManyField(CustomUser,related_name = 'post_like')
+	likes        = models.ManyToManyField(User,related_name = 'post_like')
 	category     = ListCharField(base_field=models.CharField(max_length=10),size=6,max_length=(6 * 11),null=True)
 	view_count   = models.IntegerField(default=0)
-	dislikes     = models.ManyToManyField(CustomUser,related_name = 'post_dislike')
+	dislikes     = models.ManyToManyField(User,related_name = 'post_dislike')
 	featured     = models.BooleanField(default=False)
 	updated_at   = models.DateTimeField(auto_now_add=True)
 
@@ -122,7 +122,7 @@ class Category(models.Model):
 
 
 class Post_category(models.Model):
-	cat_id = models.ForeignKey(Category,on_delete=models.CASCADE,related_name='category',default=0)
+	cat_id = models.ForeignKey(Category,on_delete=models.CASCADE,related_name='category')
 	post_id = models.ForeignKey(Post,on_delete=models.CASCADE,related_name='post')
 	
 
@@ -130,9 +130,9 @@ class Post_category(models.Model):
 
 class Comment(MPTTModel):
 	post        =  models.ForeignKey(Post,null=True,on_delete=models.CASCADE)
-	user        =  models.ForeignKey(CustomUser,null=True,on_delete=models.CASCADE)
-	likes       =  models.ManyToManyField(CustomUser,related_name = 'comment_like')
-	dislikes    =  models.ManyToManyField(CustomUser,related_name = 'comment_dislike')
+	user        =  models.ForeignKey(User,null=True,on_delete=models.CASCADE)
+	likes       =  models.ManyToManyField(User,related_name = 'comment_like')
+	dislikes    =  models.ManyToManyField(User,related_name = 'comment_dislike')
 	parent      =  TreeForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
 	add_comment =  models.DateTimeField(auto_now_add=True)
 	content     =  models.TextField(default="sssssss")
