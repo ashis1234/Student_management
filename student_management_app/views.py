@@ -113,7 +113,7 @@ def doLogin(request):
             if user.user_type==0:
                 return HttpResponseRedirect('principal_home')
             elif user.user_type==1:
-                return HttpResponseRedirect('admin_home')
+                return HttpResponseRedirect('hod_home')
             elif user.user_type==2:
                 return HttpResponseRedirect("staff_home")
             else:
@@ -222,7 +222,6 @@ def do_hod_signup(request):
     password=request.POST.get("password")
     try:
         user=User.objects.create_user(username=username,password=password,email=email,user_type=1)
-        user.hod.address=address
         user.save()
         messages.success(request,"Successfully Created Admin")
         return HttpResponseRedirect(reverse("show_login"))
@@ -284,7 +283,7 @@ def do_signup_student(request):
 
 def apply_leave(request):
     user_type = request.session.get('user_type',-1)
-    if user_type not in ['0','1','2']:
+    if user_type < 1:
         raise Http404('method not allowed')
     user_obj = User.objects.get(id=request.user.id)
     leave_data=LeaveReport.objects.filter(user=user_obj)
@@ -293,7 +292,7 @@ def apply_leave(request):
 
 def apply_leave_save(request):
     user_type = request.session.get('user_type',-1)
-    if user_type not in ['0','1','2']:
+    if user_type < 1:
         raise Http404('method not allowed')
     if request.method!="POST":
         return HttpResponseRedirect(reverse("apply_leave"))
@@ -314,7 +313,7 @@ def apply_leave_save(request):
 
 def feedback(request):
     user_type = request.session.get('user_type',-1)
-    if user_type not in ['0','1','2']:
+    if user_type < 1:
         raise Http404('method not allowed')
     user_obj = User.objects.get(id=request.user.id)
     feedback_data=FeedBack.objects.filter(user=user_obj)
@@ -322,7 +321,7 @@ def feedback(request):
 
 def feedback_save(request):
     user_type = request.session.get('user_type',-1)
-    if user_type not in ['0','1','2']:
+    if user_type < 1:
         raise Http404('method not allowed')
     if request.method!="POST":
         return HttpResponseRedirect(reverse("feedback_save"))
@@ -355,7 +354,7 @@ def Delete(request,type,id):
                     User.objects.filter(id=student.admin.id).delete()
                     messages.success(request,type.capitalize() + ' Deleted Successfully')
                 elif type == 'staff':
-                    user = User.objects,get(id=id)
+                    user = User.objects.get(id=id)
                     if user.user_type == '1':
                         staff = HOD.objects.get(admin=user)
                     else:
@@ -394,7 +393,7 @@ def Delete(request,type,id):
 
     
 
-def ProfileView(request,user):
+def ProfileView(user):
     try:
         user = User.objects.get(username=user)
     except Exception as e:

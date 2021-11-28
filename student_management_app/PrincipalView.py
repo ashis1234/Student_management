@@ -19,7 +19,7 @@ from user.models import User
 
 def check_valid_user_access_the_page(request):
     user_type = request.session.get('user_type',-1)
-    if user_type != '0':
+    if user_type != 0:
         raise Http404('method not allowed')
     
 
@@ -423,7 +423,7 @@ def edit_hod_save(request):
                 user.email=email
                 user.save()
 
-                hod=Principal.objects.get(admin=hod_id)
+                hod=HOD.objects.get(admin=hod_id)
                 if profile_pic_url!=None:
                     hod.profile_pic=profile_pic_url
                 hod.save()
@@ -435,7 +435,7 @@ def edit_hod_save(request):
                 return HttpResponseRedirect(reverse("edit_hod",kwargs={"hod_id":hod_id}))
         else:
             form=EditHODForm(request.POST)
-            hod=hods.objects.get(admin=hod_id)
+            hod=HOD.objects.get(admin=hod_id)
             return render(request,"edit_profile.html",{'action_path':'edit_hod_save',"form":form,"id":hod_id,"name":'Profile'})
 
 

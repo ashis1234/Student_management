@@ -14,7 +14,7 @@ from user.models import User
 
 def check_valid_user_access_the_page(request):
     user_type = request.session.get('user_type',-1)
-    if user_type != '2' and user_type != '1':
+    if user_type != 2 and user_type != 1:
         raise Http404('method not allowed')
     
 
@@ -54,7 +54,11 @@ def staff_home(request):
 def staff_profile(request):
     check_valid_user_access_the_page(request)
     user=User.objects.get(id=request.user.id)
-    staff=Staffs.objects.get(admin=user)
+    print(user)
+    if user.user_type == 1:
+        staff=HOD.objects.get(admin=user)
+    else:
+        staff=Staffs.objects.get(admin=user)
     return render(request,"staff_template/staff_profile.html",{"user":user,"staff":staff})
 
 def staff_profile_save(request):
@@ -66,15 +70,19 @@ def staff_profile_save(request):
         last_name=request.POST.get("last_name")
         address=request.POST.get("address")
         password=request.POST.get("password")
+        print(request.POST)
         try:
-            User=User.objects.get(id=request.user.id)
-            User.first_name=first_name
-            User.last_name=last_name
+            user=User.objects.get(id=request.user.id)
+            user.first_name=first_name
+            user.last_name=last_name
             if password!=None and password!="":
-                User.set_password(password)
-            User.save()
-
-            staff=Staffs.objects.get(admin=User.id)
+                user.set_password(password)
+            user.save()
+            
+            if user.user_type == 1:
+                staff=HOD.objects.get(admin=user)
+            else:
+                staff=Staffs.objects.get(admin=user)
             staff.address=address
             staff.save()
             messages.success(request, "Successfully Updated Profile")
@@ -240,8 +248,6 @@ def Assignment_upload(request):
             print()
             messages.error(request,'assignment not upload')
             return HttpResponseRedirect(reverse('assignment_upload'))
-    messages.error(request,'assignment not upload')
-    return HttpResponseRedirect(reverse('assignment_upload'))
 
 
 def assignment_check(request):

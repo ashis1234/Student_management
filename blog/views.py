@@ -213,13 +213,13 @@ def Articledetails(request,pk,cmnt_id=None):
 # 	form_class = PostForm
 # 	template_name = 'addpost.html'
 # 	print(User.user_type)
-# 	success_url = reverse_lazy('admin_home')
+# 	success_url = reverse_lazy('hod_home')
 
 # class UpdatePost(UpdateView):
 # 	model=Post
 # 	form_class = EditForm
 # 	template_name = 'update_post.html'
-# 	success_url = reverse_lazy('admin_home')
+# 	success_url = reverse_lazy('hod_home')
 
 # class DeletePost(DeleteView):
 # 	model = Post

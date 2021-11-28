@@ -14,7 +14,7 @@ from user.models import User
 
 def check_valid_user_access_the_page(request):
     user_type = request.session.get('user_type',-1)
-    if user_type != '3':
+    if user_type != 3:
         raise Http404('method not allowed')
     
 
@@ -78,11 +78,11 @@ def student_profile_save(request):
         password=request.POST.get("password")
         address=request.POST.get("address")
         try:
-            User=User.objects.get(id=request.user.id)
-            User.first_name=first_name
-            User.last_name=last_name
-            User.save()
-            student=Students.objects.get(admin=User)
+            user=User.objects.get(id=request.user.id)
+            user.first_name=first_name
+            user.last_name=last_name
+            user.save()
+            student=Students.objects.get(admin=user)
             student.address=address
             student.save()
             messages.success(request, "Successfully Updated Profile")
@@ -92,11 +92,11 @@ def student_profile_save(request):
             return HttpResponseRedirect(reverse("student_profile"))
 
 
-def student_view_result(request):
-    check_valid_user_access_the_page(request)
-    student=Students.objects.get(admin=request.user.id)
-    studentresult=StudentResult.objects.filter(student_id=student.id)
-    return render(request,"student_template/student_result.html",{"studentresult":studentresult})
+# def student_view_result(request):
+#     check_valid_user_access_the_page(request)
+#     student=Students.objects.get(admin=request.user.id)
+#     studentresult=StudentResult.objects.filter(student_id=student.id)
+#     return render(request,"student_template/student_result.html",{"studentresult":studentresult})
 
 
 def student_view_attendance(request):

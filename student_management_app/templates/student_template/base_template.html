@@ -55,7 +55,7 @@
   <!-- /.navbar -->
 
   <!-- Main Sidebar Container -->
-    {% include 'student_template/sidebar_template.html' with user=user id=id %}
+    {% include 'sidebar.html' with user=user id=id %}
 
   <!-- Content Wrapper. Contains page content -->
    <div class="content-wrapper">
@@ -71,7 +71,7 @@
           </div><!-- /.col -->
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="{% url 'staff_home' %}">Home</a></li>
+              <li class="breadcrumb-item"><a href="{% url 'student_home' %}">Home</a></li>
             </ol>
           </div><!-- /.col -->
         </div><!-- /.row -->

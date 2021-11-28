@@ -20,7 +20,7 @@ urlpatterns = [
     path('',views.ShowLoginPage,name="show_login"),
     path('logout_user', views.logout_user,name="logout_user"),
     path('doLogin',views.doLogin,name="do_login"),
-    path('admin_home',HodViews.Hod_home,name="admin_home"),
+    path('hod_home',HodViews.Hod_home,name="hod_home"),
     path('principal_home',principal_home,name="principal_home"),
     
 

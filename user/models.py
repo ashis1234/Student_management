@@ -7,7 +7,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 import json
 from django.dispatch import receiver
 from django.db import models
-
+from django.conf import settings
 
 class UserManager(BaseUserManager):
 
@@ -22,6 +22,7 @@ class UserManager(BaseUserManager):
         user.user_type = user_type
         user.save()
         return user
+
         
     def create_superuser(self, username, email, password=None,user_type=0):
         if password is None:
@@ -36,6 +37,9 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=255, unique=True, db_index=True)
+    first_name = models.CharField(max_length=255, default="")
+    last_name = models.CharField(max_length=255, default="")
+    
     email = models.EmailField(max_length=255, unique=True, db_index=True)
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -49,7 +53,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     def __str__(self):
-        return self.email
+        return self.username
 
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__, 
@@ -57,14 +61,15 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     @property
     def profilePic(self):
-        if self.user_type=='0' and self.principal.profile_pic:
-            return self.principal.profile_pic
-        if self.user_type=='1' and self.hod.profile_pic:
-            return self.hod.profile_pic
-        elif self.user_type=='2' and self.staff.profile_pic:
-            return self.staff.profile_pic
-        elif self.user_type=='3' and self.student.profile_pic:
-            return self.student.profile_pic
+        print(self.user_type,self.hod.profile_pic)
+        if self.user_type==0 and self.principal.profile_pic:
+            return settings.MEDIA_URL+ str(self.principal.profile_pic)
+        if self.user_type==1 and self.hod.profile_pic:
+            return settings.MEDIA_URL+ str(self.hod.profile_pic)
+        elif self.user_type==2 and self.staff.profile_pic:
+            return settings.MEDIA_URL+ str(self.staff.profile_pic)
+        elif self.user_type==3 and self.student.profile_pic:
+            return settings.MEDIA_URL+str( self.student.profile_pic)
         else:
             return "https://userpic.codeforces.org/no-avatar.jpg"
 

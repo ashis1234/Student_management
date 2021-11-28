@@ -19,7 +19,7 @@ from user.models import User
 
 def check_valid_user_access_the_page(request):
     user_type = request.session.get('user_type',-1)
-    if user_type != '1':
+    if user_type != 1:
         raise Http404('method not allowed')
     
 
